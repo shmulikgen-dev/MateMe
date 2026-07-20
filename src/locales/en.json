@@ -1,0 +1,21 @@
+{
+  "appTitle": "MateMe",
+  "appSubtitle": "The hyper-local, privacy-first community matching app.",
+  "enterAnonymously": "Enter Anonymously",
+  "loggedInAs": "Logged in anonymously",
+  "newRequest": "New Request/Offer",
+  "viewFeed": "View Local Feed",
+  "myDashboard": "My Dashboard (Rule of 3)",
+  "logout": "Logout",
+  "createPost": "Create a Request or Offer",
+  "publish": "Publish to Community",
+  "demand": "DEMAND",
+  "supply": "SUPPLY",
+  "connect": "Connect",
+  "kmAway": "km away",
+  "noPosts": "No requests or offers in your area yet.",
+  "chooseAlias": "Choose an Alias",
+  "chooseAliasDesc": "This name will be visible in chats when you connect with others.",
+  "save": "Save",
+  "trustScore": "Trust Score"
+}

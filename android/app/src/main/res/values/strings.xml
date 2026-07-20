@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name"> Community Match</string>
+    <string name="title_activity_main"> Community Match</string>
+    <string name="package_name">com.community.match</string>
+    <string name="custom_url_scheme">com.community.match</string>
+</resources>
