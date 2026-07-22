@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
 import { collection, doc, addDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { MapPin, ArrowLeft, SearchX } from 'lucide-react';
+import { MapPin, ArrowLeft, SearchX, Share2, Flag } from 'lucide-react';
 import { useFeed } from '../useFeed';
 
 interface FeedProps {
@@ -16,6 +16,46 @@ export default function Feed({ embedded = false }: FeedProps) {
   const { posts, setPosts, loading, location } = useFeed();
   const [showAll, setShowAll] = useState(!embedded);
   const [bids, setBids] = useState<{[key: string]: string}>({});
+  const [reportModal, setReportModal] = useState<{isOpen: boolean, postId: string}>({isOpen: false, postId: ''});
+  const [reportReason, setReportReason] = useState('');
+
+  const handleShare = async (postId: string) => {
+    const url = `${window.location.origin}/post/${postId}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: t('appTitle'),
+          text: t('checkOutThisPost'),
+          url: url,
+        });
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      navigator.clipboard.writeText(url);
+      alert(t('linkCopied', 'הקישור הועתק ללוח'));
+    }
+  };
+
+  const handleReport = async () => {
+    if (!reportModal.postId || !reportReason.trim()) return;
+    try {
+      await addDoc(collection(db, 'reports'), {
+        targetId: reportModal.postId,
+        targetType: 'post',
+        reason: reportReason,
+        reporterId: auth.currentUser?.uid || 'anonymous',
+        status: 'open',
+        createdAt: serverTimestamp()
+      });
+      alert(t('reportSubmitted', 'הדיווח נשלח בהצלחה'));
+      setReportModal({isOpen: false, postId: ''});
+      setReportReason('');
+    } catch (error) {
+      console.error('Error reporting:', error);
+      alert(t('errorOccurred', 'אירעה שגיאה'));
+    }
+  };
 
   const handleConnect = async (postId: string, currentResponses: number, isTender: boolean) => {
     try {
@@ -107,9 +147,17 @@ export default function Feed({ embedded = false }: FeedProps) {
             <span style={{ fontWeight: '600', letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.75rem', padding: '4px 10px', borderRadius: '20px', background: post.type === 'demand' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(16, 185, 129, 0.15)', color: post.type === 'demand' ? '#a5b4fc' : '#6ee7b7' }}>
               {t(post.type)}
             </span>
-            <span style={{ fontSize: '0.8rem', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <MapPin size={12} /> {post.distance.toFixed(1)} {t('kmAway')}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+              <span style={{ fontSize: '0.8rem', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <MapPin size={12} /> {post.distance.toFixed(1)} {t('kmAway')}
+              </span>
+              <button onClick={() => handleShare(post.id)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0 }}>
+                <Share2 size={16} />
+              </button>
+              <button onClick={() => setReportModal({isOpen: true, postId: post.id})} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0 }}>
+                <Flag size={16} />
+              </button>
+            </div>
           </div>
 
           <div style={{ marginBottom: '0.8rem', fontSize: '0.9rem' }}>
@@ -178,6 +226,29 @@ export default function Feed({ embedded = false }: FeedProps) {
         >
           {t('showMorePosts', 'הצג את כל הפוסטים הרלוונטים')}
         </button>
+      )}
+
+      {reportModal.isOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+          <div className="glass animate-fade-in" style={{ padding: '2rem', width: '100%', maxWidth: '400px' }}>
+            <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Flag color="var(--primary-color)" /> {t('reportPost', 'דיווח על פוסט')}</h3>
+            <p style={{ fontSize: '0.9rem', opacity: 0.8 }}>{t('reportReasonDesc', 'מדוע אתה מדווח על פוסט זה?')}</p>
+            <textarea
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              style={{ width: '100%', height: '100px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', color: 'white', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}
+              placeholder={t('reportPlaceholder', 'פרט כאן...')}
+            />
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button className="btn" onClick={() => setReportModal({isOpen: false, postId: ''})} style={{ flex: 1, background: 'transparent', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}>
+                {t('cancel')}
+              </button>
+              <button className="btn" onClick={handleReport} style={{ flex: 1, background: 'var(--primary-color)' }}>
+                {t('submit', 'שלח')}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -13,6 +13,7 @@ import MyPosts from './components/MyPosts';
 import Chat from './components/Chat';
 import Inbox from './components/Inbox';
 import AdminPanel from './components/AdminPanel';
+import PostView from './components/PostView';
 import './i18n';
 import './App.css';
 
@@ -192,6 +193,7 @@ function App() {
         <Route path="/dashboard" element={<MyPosts />} />
         <Route path="/settings" element={<ProfileSettings />} />
         <Route path="/user/:userId" element={<UserProfileView />} />
+        <Route path="/post/:id" element={<PostView />} />
         <Route path="/chat/:chatId" element={<Chat />} />
         <Route path="/admin" element={<AdminPanel />} />
       </Routes>

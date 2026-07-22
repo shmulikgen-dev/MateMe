@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
 import { collection, query, where, getDocs, updateDoc, doc, addDoc, deleteDoc, getDoc } from 'firebase/firestore';
-import { ArrowLeft, Inbox, CheckCircle, Trash2, Ghost, PackageOpen } from 'lucide-react';
+import { ArrowLeft, Inbox, CheckCircle, Trash2, Ghost, PackageOpen, Share2, Link, Flag } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface MyPostsProps {
@@ -20,6 +20,46 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
   const [activeResponses, setActiveResponses] = useState<any[]>([]);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reportModal, setReportModal] = useState<{isOpen: boolean, postId: string}>({isOpen: false, postId: ''});
+  const [reportReason, setReportReason] = useState('');
+
+  const handleShare = async (postId: string) => {
+    const url = `${window.location.origin}/post/${postId}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: t('appTitle'),
+          text: t('checkOutThisPost'),
+          url: url,
+        });
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      navigator.clipboard.writeText(url);
+      alert(t('linkCopied', 'הקישור הועתק ללוח'));
+    }
+  };
+
+  const handleReport = async () => {
+    if (!reportModal.postId || !reportReason.trim()) return;
+    try {
+      await addDoc(collection(db, 'reports'), {
+        targetId: reportModal.postId,
+        targetType: 'post',
+        reason: reportReason,
+        reporterId: auth.currentUser?.uid || 'anonymous',
+        status: 'open',
+        createdAt: new Date()
+      });
+      alert(t('reportSubmitted', 'הדיווח נשלח בהצלחה'));
+      setReportModal({isOpen: false, postId: ''});
+      setReportReason('');
+    } catch (error) {
+      console.error('Error reporting:', error);
+      alert(t('errorOccurred', 'אירעה שגיאה'));
+    }
+  };
 
   useEffect(() => {
     if (activeTab === 'posts') {
@@ -197,11 +237,21 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
                 <span style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.8rem', color: post.type === 'demand' ? 'var(--primary-color)' : 'var(--secondary-color)' }}>
                   {t(post.type)}
                 </span>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
                   <span style={{ fontSize: '0.8rem', padding: '4px 10px', borderRadius: '12px', background: post.status === 'active' ? 'rgba(83, 194, 139, 0.2)' : (post.status === 'evaluating' ? 'rgba(255, 165, 0, 0.2)' : (post.status === 'tender' ? 'rgba(236, 72, 153, 0.2)' : 'rgba(99, 102, 241, 0.2)')) }}>
                     {t(`status${post.status.charAt(0).toUpperCase() + post.status.slice(1)}`)}
                   </span>
-                  <button onClick={() => handleDeletePost(post.id)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0 }}>
+                  
+                  {post.type === 'supply' && (
+                    <button onClick={() => handleShare(post.id)} title="Direct Booking Link" style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0 }}>
+                      <Link size={16} />
+                    </button>
+                  )}
+                  <button onClick={() => handleShare(post.id)} title="Share" style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0 }}>
+                    <Share2 size={16} />
+                  </button>
+
+                  <button onClick={() => handleDeletePost(post.id)} title="Delete" style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0 }}>
                     <Trash2 size={16} />
                   </button>
                 </div>
@@ -264,10 +314,21 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
                 <span style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.8rem', color: 'var(--accent-color)' }}>
                   {offer.bidAmount ? `${t('yourBid')} ₪${offer.bidAmount}` : t('myOffers')}
                 </span>
-                
-                <span style={{ fontSize: '0.8rem', padding: '4px 10px', borderRadius: '12px', background: offer.status === 'accepted' ? 'rgba(83, 194, 139, 0.2)' : (offer.status === 'rejected' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 165, 0, 0.2)'), color: offer.status === 'accepted' ? '#6ee7b7' : (offer.status === 'rejected' ? '#fca5a5' : '#fcd34d') }}>
-                  {getTranslatedStatus(offer.status)}
-                </span>
+                <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.8rem', padding: '4px 10px', borderRadius: '12px', background: offer.status === 'accepted' ? 'rgba(83, 194, 139, 0.2)' : (offer.status === 'rejected' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 165, 0, 0.2)'), color: offer.status === 'accepted' ? '#6ee7b7' : (offer.status === 'rejected' ? '#fca5a5' : '#fcd34d') }}>
+                    {getTranslatedStatus(offer.status)}
+                  </span>
+                  {offer.post && (
+                    <>
+                      <button onClick={() => handleShare(offer.post.id)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0 }}>
+                        <Share2 size={16} />
+                      </button>
+                      <button onClick={() => setReportModal({isOpen: true, postId: offer.post.id})} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0 }}>
+                        <Flag size={16} />
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
               
               {offer.post ? (
@@ -322,6 +383,29 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {reportModal.isOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+          <div className="glass animate-fade-in" style={{ padding: '2rem', width: '100%', maxWidth: '400px' }}>
+            <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Flag color="var(--primary-color)" /> {t('reportPost', 'דיווח על פוסט')}</h3>
+            <p style={{ fontSize: '0.9rem', opacity: 0.8 }}>{t('reportReasonDesc', 'מדוע אתה מדווח על פוסט זה?')}</p>
+            <textarea
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              style={{ width: '100%', height: '100px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', color: 'white', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}
+              placeholder={t('reportPlaceholder', 'פרט כאן...')}
+            />
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button className="btn" onClick={() => setReportModal({isOpen: false, postId: ''})} style={{ flex: 1, background: 'transparent', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}>
+                {t('cancel')}
+              </button>
+              <button className="btn" onClick={handleReport} style={{ flex: 1, background: 'var(--primary-color)' }}>
+                {t('submit', 'שלח')}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
