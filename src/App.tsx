@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from './useAuth';
 import CreateDemand from './components/CreateDemand';
 import CreateSupply from './components/CreateSupply';
+import ProfileSettings from './components/ProfileSettings';
+import NotificationBell from './components/NotificationBell';
 import Feed from './components/Feed';
 import MyPosts from './components/MyPosts';
 import Chat from './components/Chat';
@@ -69,9 +71,14 @@ function Home() {
               <button className="btn" onClick={() => navigate('/feed')} style={{ width: '100%', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', boxShadow: 'none', marginBottom: '1rem' }}>
                 {t('viewFeed')}
               </button>
-              <button className="btn" onClick={() => navigate('/dashboard')} style={{ width: '100%', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', boxShadow: 'none' }}>
-                {t('myDashboard')}
-              </button>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button className="btn" onClick={() => navigate('/dashboard')} style={{ flex: 1, background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', boxShadow: 'none' }}>
+                  {t('myDashboard')}
+                </button>
+                <button className="btn" onClick={() => navigate('/settings')} style={{ flex: 1, background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', boxShadow: 'none' }}>
+                  {t('profileSettings')}
+                </button>
+              </div>
             </div>
             
             <Inbox />
@@ -167,15 +174,19 @@ function App() {
   }
 
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/feed" element={<Feed />} />
-      <Route path="/create-demand" element={<CreateDemand />} />
-      <Route path="/create-supply" element={<CreateSupply />} />
-      <Route path="/dashboard" element={<MyPosts />} />
-      <Route path="/chat/:chatId" element={<Chat />} />
-      <Route path="/admin" element={<AdminPanel />} />
-    </Routes>
+    <>
+      {user && profile && <NotificationBell />}
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/feed" element={<Feed />} />
+        <Route path="/create-demand" element={<CreateDemand />} />
+        <Route path="/create-supply" element={<CreateSupply />} />
+        <Route path="/dashboard" element={<MyPosts />} />
+        <Route path="/settings" element={<ProfileSettings />} />
+        <Route path="/chat/:chatId" element={<Chat />} />
+        <Route path="/admin" element={<AdminPanel />} />
+      </Routes>
+    </>
   );
 }
 

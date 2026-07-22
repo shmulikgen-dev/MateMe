@@ -91,5 +91,15 @@
   "describeDemand": "Describe what you need...",
   "describeSupply": "Describe your service or experience...",
   "createDemandTitle": "Create a Request",
-  "createSupplyTitle": "Offer a Service"
+  "createSupplyTitle": "Offer a Service",
+  "profileSettings": "Profile & Settings",
+  "saveChanges": "Save Changes",
+  "alias": "Display Name",
+  "city": "City / Community",
+  "notificationPreferences": "Notification Preferences",
+  "notificationDesc": "Select the categories you want to be notified about:",
+  "notifications": "Notifications",
+  "noNotifications": "No new notifications",
+  "settingsSaved": "Settings saved successfully!",
+  "newPostIn": "New post in"
 }

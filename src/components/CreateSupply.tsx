@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
 import { geohashForLocation } from 'geofire-common';
 import { MapPin, Navigation, ArrowLeft, Tags } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -39,7 +39,7 @@ export default function CreateSupply() {
         const expiresAt = new Date();
         expiresAt.setHours(expiresAt.getHours() + ttlHours);
 
-        await addDoc(collection(db, 'posts'), {
+        const docRef = await addDoc(collection(db, 'posts'), {
           creatorId: auth.currentUser!.uid,
           type,
           category,
@@ -53,6 +53,33 @@ export default function CreateSupply() {
           status: 'active',
           responseCount: 0
         });
+
+        // Fan-out notifications to subscribed users
+        try {
+          const usersQuery = query(
+            collection(db, 'users'),
+            where('subscribedCategories', 'array-contains', category)
+          );
+          const usersSnap = await getDocs(usersQuery);
+          const notifPromises: Promise<any>[] = [];
+          
+          usersSnap.forEach(userDoc => {
+            if (userDoc.id !== auth.currentUser!.uid) {
+              notifPromises.push(addDoc(collection(db, 'notifications'), {
+                userId: userDoc.id,
+                postId: docRef.id,
+                type: 'new_post',
+                message: `${t('newPostIn')} ${t(category)}!`,
+                read: false,
+                createdAt: serverTimestamp()
+              }));
+            }
+          });
+          
+          await Promise.all(notifPromises);
+        } catch (notifErr) {
+          console.error("Error sending notifications: ", notifErr);
+        }
 
         setStatus(t('postSuccess'));
         setTimeout(() => navigate('/feed'), 2000);

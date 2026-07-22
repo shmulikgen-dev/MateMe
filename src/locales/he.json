@@ -88,5 +88,15 @@
   "describeDemand": "תאר למה אתה זקוק...",
   "describeSupply": "תאר את השירות או הניסיון שאתה מציע...",
   "createDemandTitle": "יצירת בקשת עזרה",
-  "createSupplyTitle": "הצעת שירות לקהילה"
+  "createSupplyTitle": "הצעת שירות לקהילה",
+  "profileSettings": "פרופיל והגדרות",
+  "saveChanges": "שמור שינויים",
+  "alias": "שם תצוגה",
+  "city": "עיר / קהילה",
+  "notificationPreferences": "הגדרות התראה",
+  "notificationDesc": "בחר באילו קטגוריות תרצה לקבל התראה כשמתפרסם פוסט חדש:",
+  "notifications": "התראות",
+  "noNotifications": "אין התראות חדשות",
+  "settingsSaved": "ההגדרות נשמרו בהצלחה!",
+  "newPostIn": "פוסט חדש ב"
 }
