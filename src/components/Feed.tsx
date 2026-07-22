@@ -57,7 +57,7 @@ export default function Feed({ embedded = false }: FeedProps) {
     }
   };
 
-  const handleConnect = async (postId: string, currentResponses: number, isTender: boolean) => {
+  const handleConnect = async (postId: string, currentResponses: number, isTender: boolean, postType?: string) => {
     try {
       if (!auth.currentUser) return;
       
@@ -72,8 +72,8 @@ export default function Feed({ embedded = false }: FeedProps) {
       
       const updates: any = { responseCount: newCount };
       
-      // Rule of 3: Auto-pause
-      if (newCount >= 3 && !isTender) {
+      // Rule of 3: Auto-pause (skip for supply posts)
+      if (postType !== 'supply' && newCount >= 3 && !isTender) {
         updates.status = 'evaluating';
       }
       
@@ -91,7 +91,7 @@ export default function Feed({ embedded = false }: FeedProps) {
       // Update local UI
       setPosts(posts.map(p => {
         if (p.id === postId) {
-          return { ...p, responseCount: newCount, status: (newCount >= 3 && !isTender) ? 'evaluating' : p.status };
+          return { ...p, responseCount: newCount, status: (postType !== 'supply' && newCount >= 3 && !isTender) ? 'evaluating' : p.status };
         }
         return p;
       }).filter(p => p.status === 'active' || p.status === 'tender'));
@@ -223,10 +223,13 @@ export default function Feed({ embedded = false }: FeedProps) {
           ) : (
             <button 
               className="btn" 
-              onClick={() => handleConnect(post.id, post.responseCount || 0, false)}
+              onClick={() => handleConnect(post.id, post.responseCount || 0, false, post.type)}
               style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', boxShadow: 'none' }}
             >
-              {t('connectCount', { count: post.responseCount || 0 })}
+              {post.type === 'supply' 
+                ? t('interestedToArrive', 'מעניין, מתכנן להגיע') 
+                : t('connectCount', { count: post.responseCount || 0 })
+              }
             </button>
           )}
         </div>

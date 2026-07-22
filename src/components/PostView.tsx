@@ -48,7 +48,7 @@ export default function PostView() {
       const postRef = doc(db, 'posts', post.id);
       
       const updates: any = { responseCount: newCount };
-      if (newCount >= 3 && !isTender) {
+      if (post.type !== 'supply' && newCount >= 3 && !isTender) {
         updates.status = 'evaluating';
       }
       
@@ -63,7 +63,7 @@ export default function PostView() {
       });
       
       alert(isTender ? t('bidSubmitted') : t('connectionSent'));
-      setPost({...post, responseCount: newCount, status: (newCount >= 3 && !isTender) ? 'evaluating' : post.status});
+      setPost({...post, responseCount: newCount, status: (post.type !== 'supply' && newCount >= 3 && !isTender) ? 'evaluating' : post.status});
     } catch (error) {
       console.error("Error connecting: ", error);
       alert(t('failedConnect', 'שגיאה ביצירת קשר'));
@@ -148,7 +148,7 @@ export default function PostView() {
                 </div>
               ) : (
                 <button className="btn" onClick={() => handleConnect(false)} style={{ width: '100%', background: 'var(--primary-color)' }}>
-                  {t('connect', 'צור קשר')}
+                  {post.type === 'supply' ? t('interestedToArrive', 'מעניין, מתכנן להגיע') : t('connect', 'צור קשר')}
                 </button>
               )
             ) : (
