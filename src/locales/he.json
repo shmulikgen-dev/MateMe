@@ -79,5 +79,14 @@
   "week1": "שבוע",
   "processing": "מעבד...",
   "postSuccess": "פורסם בהצלחה לקהילה שלך!",
-  "errorLocation": "אין גישה למיקום. לא ניתן ליצור פוסט."
+  "errorLocation": "אין גישה למיקום. לא ניתן ליצור פוסט.",
+  "createDemandBtn": "בקש עזרה",
+  "createSupplyBtn": "הצע שירות",
+  "availability": "זמינות כללית",
+  "availabilityDesc": "למשל: בערבים, סופי שבוע, גמיש",
+  "startingPrice": "תעריף משוער / מחיר התחלתי (₪)",
+  "describeDemand": "תאר למה אתה זקוק...",
+  "describeSupply": "תאר את השירות או הניסיון שאתה מציע...",
+  "createDemandTitle": "יצירת בקשת עזרה",
+  "createSupplyTitle": "הצעת שירות לקהילה"
 }

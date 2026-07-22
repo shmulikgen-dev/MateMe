@@ -82,5 +82,14 @@
   "week1": "1 Week",
   "processing": "Processing...",
   "postSuccess": "Successfully posted to your community!",
-  "errorLocation": "Location access denied. Cannot create post."
+  "errorLocation": "Location access denied. Cannot create post.",
+  "createDemandBtn": "Request Help",
+  "createSupplyBtn": "Offer Service",
+  "availability": "General Availability",
+  "availabilityDesc": "e.g., Evenings, Weekends, Flexible",
+  "startingPrice": "Starting Rate / Price (₪)",
+  "describeDemand": "Describe what you need...",
+  "describeSupply": "Describe your service or experience...",
+  "createDemandTitle": "Create a Request",
+  "createSupplyTitle": "Offer a Service"
 }

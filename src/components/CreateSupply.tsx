@@ -6,16 +6,15 @@ import { geohashForLocation } from 'geofire-common';
 import { MapPin, Navigation, ArrowLeft, Tags } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-export default function CreatePost() {
+export default function CreateSupply() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [type, setType] = useState<'demand' | 'supply'>('demand');
+  const type = 'supply';
   const [category, setCategory] = useState('catOther');
   const [description, setDescription] = useState('');
   const [radius, setRadius] = useState(5);
   const [ttlHours, setTtlHours] = useState(24);
-  const [targetDate, setTargetDate] = useState('');
-  const [targetTime, setTargetTime] = useState('');
+  const [availability, setAvailability] = useState('');
   const [budget, setBudget] = useState('');
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
@@ -45,8 +44,7 @@ export default function CreatePost() {
           type,
           category,
           description,
-          targetDate,
-          targetTime,
+          availability,
           budget: Number(budget) || 0,
           radius,
           location: { lat, lng, geohash: hash },
@@ -77,22 +75,7 @@ export default function CreatePost() {
       </button>
 
       <div className="glass" style={{ padding: '2rem', borderRadius: '16px' }}>
-        <h2 style={{marginTop: 0}}>{t('createPost')}</h2>
-        
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
-          <button 
-            onClick={() => setType('demand')}
-            style={{ flex: 1, padding: '1rem', borderRadius: '12px', border: type === 'demand' ? '2px solid var(--primary-color)' : '1px solid var(--glass-border)', background: type === 'demand' ? 'rgba(99, 102, 241, 0.2)' : 'transparent', color: 'var(--text-primary)', cursor: 'pointer' }}
-          >
-            {t('iNeed')}
-          </button>
-          <button 
-            onClick={() => setType('supply')}
-            style={{ flex: 1, padding: '1rem', borderRadius: '12px', border: type === 'supply' ? '2px solid var(--secondary-color)' : '1px solid var(--glass-border)', background: type === 'supply' ? 'rgba(16, 185, 129, 0.2)' : 'transparent', color: 'var(--text-primary)', cursor: 'pointer' }}
-          >
-            {t('iOffer')}
-          </button>
-        </div>
+        <h2 style={{marginTop: 0}}>{t('createSupplyTitle')}</h2>
 
         <div style={{ marginBottom: '1.5rem' }}>
           <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
@@ -115,7 +98,7 @@ export default function CreatePost() {
         </div>
 
         <textarea 
-          placeholder={t('describePost')}
+          placeholder={t('describeSupply')}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           style={{ width: '100%', minHeight: '120px', marginBottom: '1.5rem', boxSizing: 'border-box' }}
@@ -135,19 +118,13 @@ export default function CreatePost() {
           />
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.3rem' }}>{t('date')} {t('optional')}</label>
-            <input type="date" value={targetDate} onChange={e => setTargetDate(e.target.value)} style={{ width: '100%', padding: '0.8rem', boxSizing: 'border-box' }} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.3rem' }}>{t('time')} {t('optional')}</label>
-            <input type="time" value={targetTime} onChange={e => setTargetTime(e.target.value)} style={{ width: '100%', padding: '0.8rem', boxSizing: 'border-box' }} />
-          </div>
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.3rem' }}>{t('availability')} {t('optional')}</label>
+          <input type="text" placeholder={t('availabilityDesc')} value={availability} onChange={e => setAvailability(e.target.value)} style={{ width: '100%', padding: '0.8rem', boxSizing: 'border-box' }} />
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.3rem' }}>{t('budget')} (₪) {t('optional')}</label>
+          <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.3rem' }}>{t('startingPrice')} {t('optional')}</label>
           <input type="number" placeholder="e.g. 150" value={budget} onChange={e => setBudget(e.target.value)} style={{ width: '100%', padding: '0.8rem', boxSizing: 'border-box' }} />
         </div>
 

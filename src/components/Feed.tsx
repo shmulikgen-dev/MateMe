@@ -145,9 +145,14 @@ export default function Feed() {
             <h3 style={{margin: '0 0 0.5rem 0', fontSize: '1.5rem'}}>{t('quietHere')}</h3>
             <p style={{ margin: 0, opacity: 0.8 }}>{t('noRequestsInArea')}</p>
           </div>
-          <button className="btn animate-pulse-glow" onClick={() => navigate('/create')} style={{ marginTop: '1rem' }}>
-            {t('newRequest')}
-          </button>
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', width: '100%', maxWidth: '300px' }}>
+            <button className="btn animate-pulse-glow" onClick={() => navigate('/create-demand')} style={{ flex: 1 }}>
+              {t('createDemandBtn')}
+            </button>
+            <button className="btn" onClick={() => navigate('/create-supply')} style={{ flex: 1, background: 'var(--secondary-color)' }}>
+              {t('createSupplyBtn')}
+            </button>
+          </div>
         </div>
       )}
 
@@ -161,13 +166,19 @@ export default function Feed() {
               <MapPin size={12} /> {post.distance.toFixed(1)} {t('kmAway')}
             </span>
           </div>
+          {post.category && (
+            <div style={{ marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+              <strong>{t('category')}:</strong> {t(post.category)}
+            </div>
+          )}
           <p style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', lineHeight: '1.6' }}>{post.description}</p>
           
-          {(post.targetDate || post.targetTime || post.budget > 0) && (
-            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.8rem', borderRadius: '8px', marginBottom: '1.5rem', display: 'flex', gap: '1rem', fontSize: '0.85rem' }}>
+          {(post.targetDate || post.targetTime || post.availability || post.budget > 0) && (
+            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.8rem', borderRadius: '8px', marginBottom: '1.5rem', display: 'flex', gap: '1rem', fontSize: '0.85rem', flexWrap: 'wrap' }}>
               {post.targetDate && <div><strong>{t('date')}:</strong> {post.targetDate}</div>}
               {post.targetTime && <div><strong>{t('time')}:</strong> {post.targetTime}</div>}
-              {post.budget > 0 && <div><strong>{t('budget')}:</strong> ₪{post.budget}</div>}
+              {post.availability && <div><strong>{t('availability')}:</strong> {post.availability}</div>}
+              {post.budget > 0 && <div><strong>{post.type === 'supply' ? t('startingPrice') : t('budget')}:</strong> ₪{post.budget}</div>}
             </div>
           )}
 

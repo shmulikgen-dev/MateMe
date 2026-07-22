@@ -3,7 +3,8 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import { Hand } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './useAuth';
-import CreatePost from './components/CreatePost';
+import CreateDemand from './components/CreateDemand';
+import CreateSupply from './components/CreateSupply';
 import Feed from './components/Feed';
 import MyPosts from './components/MyPosts';
 import Chat from './components/Chat';
@@ -57,14 +58,17 @@ function Home() {
             )}
 
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginBottom: '1rem' }}>
-              <button className="btn" onClick={() => navigate('/create')} style={{ flex: 1, padding: '1rem' }}>
-                {t('newRequest')}
+              <button className="btn" onClick={() => navigate('/create-demand')} style={{ flex: 1, padding: '1rem' }}>
+                {t('createDemandBtn')}
               </button>
-              <button className="btn" onClick={() => navigate('/feed')} style={{ flex: 1, padding: '1rem', background: 'var(--secondary-color)', boxShadow: '0 4px 15px var(--secondary-glow)' }}>
-                {t('viewFeed')}
+              <button className="btn" onClick={() => navigate('/create-supply')} style={{ flex: 1, padding: '1rem', background: 'var(--secondary-color)', boxShadow: '0 4px 15px var(--secondary-glow)' }}>
+                {t('createSupplyBtn')}
               </button>
             </div>
             <div style={{ marginBottom: '2rem' }}>
+              <button className="btn" onClick={() => navigate('/feed')} style={{ width: '100%', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', boxShadow: 'none', marginBottom: '1rem' }}>
+                {t('viewFeed')}
+              </button>
               <button className="btn" onClick={() => navigate('/dashboard')} style={{ width: '100%', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', boxShadow: 'none' }}>
                 {t('myDashboard')}
               </button>
@@ -166,7 +170,8 @@ function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/feed" element={<Feed />} />
-      <Route path="/create" element={<CreatePost />} />
+      <Route path="/create-demand" element={<CreateDemand />} />
+      <Route path="/create-supply" element={<CreateSupply />} />
       <Route path="/dashboard" element={<MyPosts />} />
       <Route path="/chat/:chatId" element={<Chat />} />
       <Route path="/admin" element={<AdminPanel />} />

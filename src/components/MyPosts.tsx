@@ -179,7 +179,10 @@ export default function MyPosts() {
               </div>
               <h3 style={{margin: '0.5rem 0 0 0'}}>{t('noPostsYet')}</h3>
               <p style={{ margin: 0, opacity: 0.7, fontSize: '0.9rem' }}>When you create a new request or offer, it will appear here.</p>
-              <button className="btn" onClick={() => navigate('/create')} style={{ marginTop: '1rem' }}>{t('newRequest')}</button>
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button className="btn" onClick={() => navigate('/create-demand')} style={{ flex: 1 }}>{t('createDemandBtn')}</button>
+                <button className="btn" onClick={() => navigate('/create-supply')} style={{ flex: 1, background: 'var(--secondary-color)' }}>{t('createSupplyBtn')}</button>
+              </div>
             </div>
           )}
           {myPosts.map(post => (
@@ -190,20 +193,26 @@ export default function MyPosts() {
                 </span>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                   <span style={{ fontSize: '0.8rem', padding: '4px 10px', borderRadius: '12px', background: post.status === 'active' ? 'rgba(83, 194, 139, 0.2)' : (post.status === 'evaluating' ? 'rgba(255, 165, 0, 0.2)' : (post.status === 'tender' ? 'rgba(236, 72, 153, 0.2)' : 'rgba(99, 102, 241, 0.2)')) }}>
-                    {getTranslatedStatus(post.status)}
+                    {t(`status${post.status.charAt(0).toUpperCase() + post.status.slice(1)}`)}
                   </span>
                   <button onClick={() => handleDeletePost(post.id)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0 }}>
                     <Trash2 size={16} />
                   </button>
                 </div>
               </div>
-              <p style={{ margin: '0.5rem 0' }}>{post.description}</p>
+              {post.category && (
+                <div style={{ marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                  <strong>{t('category')}:</strong> {t(post.category)}
+                </div>
+              )}
+              <p style={{ margin: '0 0 1rem 0' }}>{post.description}</p>
               
-              {(post.targetDate || post.targetTime || post.budget > 0) && (
-                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.6rem', borderRadius: '8px', marginBottom: '0.5rem', display: 'flex', gap: '1rem', fontSize: '0.8rem' }}>
+              {(post.targetDate || post.targetTime || post.availability || post.budget > 0) && (
+                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.8rem', borderRadius: '8px', marginBottom: '1.5rem', display: 'flex', gap: '1rem', fontSize: '0.85rem', flexWrap: 'wrap' }}>
                   {post.targetDate && <div><strong>{t('date')}:</strong> {post.targetDate}</div>}
                   {post.targetTime && <div><strong>{t('time')}:</strong> {post.targetTime}</div>}
-                  {post.budget > 0 && <div><strong>{t('budget')}:</strong> ₪{post.budget}</div>}
+                  {post.availability && <div><strong>{t('availability')}:</strong> {post.availability}</div>}
+                  {post.budget > 0 && <div><strong>{post.type === 'supply' ? t('startingPrice') : t('budget')}:</strong> ₪{post.budget}</div>}
                 </div>
               )}
 
