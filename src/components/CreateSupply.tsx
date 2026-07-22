@@ -142,7 +142,7 @@ export default function CreateSupply() {
           </label>
           <input 
             type="range" 
-            min="1" max="50" 
+            min="1" max="150" 
             value={radius} 
             onChange={(e) => setRadius(Number(e.target.value))}
             style={{ width: '100%' }}

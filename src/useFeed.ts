@@ -8,7 +8,7 @@ export interface Location {
   lng: number;
 }
 
-export function useFeed(radiusKm: number = 10) {
+export function useFeed(radiusKm: number = 150) {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [location, setLocation] = useState<Location | null>(null);
