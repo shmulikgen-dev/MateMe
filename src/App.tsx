@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
-import { Hand } from 'lucide-react';
+import { Hand, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './useAuth';
 import CreateDemand from './components/CreateDemand';
@@ -33,12 +33,19 @@ function Home() {
   }, [i18n.language]);
 
   return (
-    <div style={{ padding: '2rem', textAlign: 'center' }}>
-      <button onClick={toggleLanguage} style={{ position: 'absolute', top: 10, right: 10, background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '5px 10px', borderRadius: '8px', cursor: 'pointer' }}>
-        {i18n.language === 'he' ? 'EN' : 'HE'}
-      </button>
+    <div style={{ padding: '1rem', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
+      <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: '0.5rem' }}>
+        <button onClick={toggleLanguage} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '5px 10px', borderRadius: '8px', cursor: 'pointer' }}>
+          {i18n.language === 'he' ? 'EN' : 'HE'}
+        </button>
+        {user && profile && (
+          <button onClick={() => navigate('/settings')} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '5px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Settings size={20} />
+          </button>
+        )}
+      </div>
 
-      <div className="glass" style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto' }}>
+      <div className="glass" style={{ padding: '2rem', marginBottom: '1rem' }}>
         <h1 style={{ marginBottom: '0.5rem' }}>{t('appTitle')}</h1>
         <p style={{ margin: '0 0 2rem 0', fontSize: '1.1rem' }}>{t('appSubtitle')}</p>
         
@@ -68,32 +75,32 @@ function Home() {
                 {t('createSupplyBtn')}
               </button>
             </div>
-            <div style={{ marginBottom: '2rem' }}>
-              <button className="btn" onClick={() => navigate('/feed')} style={{ width: '100%', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', boxShadow: 'none', marginBottom: '1rem' }}>
-                {t('viewFeed')}
-              </button>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button className="btn" onClick={() => navigate('/dashboard')} style={{ flex: 1, background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', boxShadow: 'none' }}>
-                  {t('myDashboard')}
-                </button>
-                <button className="btn" onClick={() => navigate('/settings')} style={{ flex: 1, background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', boxShadow: 'none' }}>
-                  {t('profileSettings')}
-                </button>
-              </div>
-            </div>
             
             <Inbox />
-
-            {profile?.role === 'admin' && (
-              <button onClick={() => navigate('/admin')} style={{ marginTop: '1rem', width: '100%', background: 'rgba(255,0,0,0.1)', border: '1px solid red', color: 'red', padding: '0.8rem', borderRadius: '8px', cursor: 'pointer' }}>
-                Admin Panel
-              </button>
-            )}
-
-            <button onClick={logout} style={{ marginTop: '2rem', background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', textDecoration: 'underline' }}>{t('logout')}</button>
           </div>
         ) : null}
       </div>
+
+      {user ? (
+        <div className="animate-fade-in" style={{ marginTop: '2rem' }}>
+          <div className="glass" style={{ padding: '1rem', marginBottom: '2rem' }}>
+            <MyPosts embedded={true} />
+          </div>
+          
+          <div className="glass" style={{ padding: '1rem' }}>
+            <Feed embedded={true} />
+          </div>
+
+          <div className="glass" style={{ padding: '2rem', marginTop: '2rem' }}>
+            {profile?.role === 'admin' && (
+              <button onClick={() => navigate('/admin')} style={{ width: '100%', background: 'rgba(255,0,0,0.1)', border: '1px solid red', color: 'red', padding: '0.8rem', borderRadius: '8px', cursor: 'pointer', marginBottom: '1rem' }}>
+                Admin Panel
+              </button>
+            )}
+            <button onClick={logout} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', textDecoration: 'underline' }}>{t('logout')}</button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

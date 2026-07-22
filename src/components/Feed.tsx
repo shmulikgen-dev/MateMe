@@ -6,12 +6,15 @@ import { collection, doc, addDoc, serverTimestamp, updateDoc } from 'firebase/fi
 import { MapPin, ArrowLeft, SearchX } from 'lucide-react';
 import { useFeed } from '../useFeed';
 
-export default function Feed() {
+interface FeedProps {
+  embedded?: boolean;
+}
+
+export default function Feed({ embedded = false }: FeedProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { posts, setPosts, loading, location } = useFeed();
-
-
+  const [showAll, setShowAll] = useState(!embedded);
   const [bids, setBids] = useState<{[key: string]: string}>({});
 
   const handleConnect = async (postId: string, currentResponses: number, isTender: boolean) => {
@@ -62,19 +65,23 @@ export default function Feed() {
 
   if (!location) return <div style={{ textAlign: 'center', padding: '2rem' }}>{t('lookingForLocation')}</div>;
 
-  return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '1rem' }}>
-      <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginBottom: '1rem' }}>
-        <ArrowLeft size={20} /> {t('backToHome')}
-      </button>
+  const displayedPosts = showAll ? posts : posts.slice(0, 3);
 
-      <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+  return (
+    <div style={{ maxWidth: '600px', margin: '0 auto', padding: embedded ? '0' : '1rem' }}>
+      {!embedded && (
+        <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginBottom: '1rem' }}>
+          <ArrowLeft size={20} /> {t('backToHome')}
+        </button>
+      )}
+
+      <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: embedded ? '1.5rem' : '0' }}>
         <MapPin /> {t('localFeed')}
       </h2>
       
       {loading && <p>{t('loadingPosts')}</p>}
       
-      {!loading && posts.length === 0 && (
+      {displayedPosts.length === 0 && !loading && location && (
         <div className="glass animate-fade-in" style={{ padding: '4rem 2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', marginTop: '2rem' }}>
           <div className="animate-float" style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--glass-bg)', border: '2px dashed var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
             <SearchX size={40} />
@@ -94,7 +101,7 @@ export default function Feed() {
         </div>
       )}
 
-      {posts.map((post, index) => (
+      {displayedPosts.map((post, index) => (
         <div key={post.id} className="glass animate-fade-in" style={{ padding: '1.5rem', marginBottom: '1.2rem', animationDelay: `${index * 0.1}s`, borderRight: `4px solid ${post.type === 'demand' ? 'var(--primary-color)' : 'var(--secondary-color)'}` }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'center' }}>
             <span style={{ fontWeight: '600', letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.75rem', padding: '4px 10px', borderRadius: '20px', background: post.type === 'demand' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(16, 185, 129, 0.15)', color: post.type === 'demand' ? '#a5b4fc' : '#6ee7b7' }}>
@@ -162,6 +169,16 @@ export default function Feed() {
           )}
         </div>
       ))}
+      
+      {!showAll && posts.length > 3 && (
+        <button 
+          className="btn" 
+          onClick={() => setShowAll(true)}
+          style={{ width: '100%', marginTop: '1rem', background: 'var(--glass-bg)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)' }}
+        >
+          {t('showMorePosts', 'הצג את כל הפוסטים הרלוונטים')}
+        </button>
+      )}
     </div>
   );
 }

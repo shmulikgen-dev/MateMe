@@ -5,7 +5,11 @@ import { collection, query, where, getDocs, updateDoc, doc, addDoc, deleteDoc, g
 import { ArrowLeft, Inbox, CheckCircle, Trash2, Ghost, PackageOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-export default function MyPosts() {
+interface MyPostsProps {
+  embedded?: boolean;
+}
+
+export default function MyPosts({ embedded = false }: MyPostsProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   
@@ -140,12 +144,14 @@ export default function MyPosts() {
   };
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '1rem' }}>
-      <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginBottom: '1rem' }}>
-        <ArrowLeft size={20} /> {t('backToHome')}
-      </button>
+    <div style={{ maxWidth: '600px', margin: '0 auto', padding: embedded ? '0' : '1rem' }}>
+      {!embedded && (
+        <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginBottom: '1rem' }}>
+          <ArrowLeft size={20} /> {t('backToHome')}
+        </button>
+      )}
 
-      <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: embedded ? '1rem' : '0' }}>
         <Inbox /> {t('myDashboard')}
       </h2>
       
