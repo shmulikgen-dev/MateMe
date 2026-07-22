@@ -96,7 +96,14 @@
   "notificationPreferences": "הגדרות התראה",
   "notificationDesc": "בחר באילו קטגוריות תרצה לקבל התראה כשמתפרסם פוסט חדש:",
   "notifications": "התראות",
-  "noNotifications": "אין התראות חדשות",
   "settingsSaved": "ההגדרות נשמרו בהצלחה!",
-  "newPostIn": "פוסט חדש ב"
+  "newPostIn": "פוסט חדש ב",
+  "publicProfile": "פרופיל ציבורי",
+  "trustPoints": "נקודות אמון",
+  "leaveReview": "השאר ביקורת קצרה",
+  "reviewPlaceholder": "לדוגמה: אמין, מהיר, מומלץ בחום!",
+  "completedTransactions": "עסקאות שהושלמו",
+  "postedBy": "פורסם ע\"י:",
+  "noReviewsYet": "עדיין אין ביקורות.",
+  "markCompletedWithReview": "השלם ושלח ביקורת"
 }

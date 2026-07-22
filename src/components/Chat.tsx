@@ -3,14 +3,18 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
 import { collection, query, where, getDocs, getDoc, doc, addDoc, onSnapshot, orderBy, serverTimestamp, updateDoc, increment, deleteDoc } from 'firebase/firestore';
 import { ArrowLeft, Send, Award, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function Chat() {
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [partnerAlias, setPartnerAlias] = useState('Loading...');
   const [isCompleted, setIsCompleted] = useState(false);
+  const [showReviewInput, setShowReviewInput] = useState(false);
+  const [reviewText, setReviewText] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -62,9 +66,10 @@ export default function Chat() {
     // Mark chat as completed
     await updateDoc(doc(db, 'chats', chatId), { status: 'completed' });
     
-    // Reward Trust Points to both users
+    // Reward Trust Points to both users and create transaction record
     const chatDoc = await getDoc(doc(db, 'chats', chatId));
     const users = chatDoc.data()?.users || [];
+    const partnerId = users.find((id: string) => id !== auth.currentUser?.uid);
     
     for (const uid of users) {
       await updateDoc(doc(db, 'users', uid), {
@@ -72,7 +77,18 @@ export default function Chat() {
       });
     }
 
+    if (partnerId) {
+      await addDoc(collection(db, 'transactions'), {
+        userId: partnerId,
+        reviewerId: auth.currentUser.uid,
+        points: 10,
+        review: reviewText,
+        createdAt: serverTimestamp()
+      });
+    }
+
     setIsCompleted(true);
+    setShowReviewInput(false);
     alert('Transaction Completed! Both users awarded +10 Trust Score.');
   };
 
@@ -117,11 +133,29 @@ export default function Chat() {
       {/* Action Bar */}
       {!isCompleted ? (
         <div style={{ padding: '1rem' }}>
-          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-            <button className="btn" onClick={handleTransactionComplete} style={{ flex: 1, background: 'var(--secondary-color)', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
-              <Award size={18} /> Mark as Completed
-            </button>
-          </div>
+          {showReviewInput ? (
+            <div className="glass animate-fade-in" style={{ padding: '1rem', marginBottom: '1rem', borderRadius: '12px' }}>
+              <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', fontWeight: 'bold' }}>{t('leaveReview')} {partnerAlias}:</p>
+              <input 
+                type="text" 
+                value={reviewText}
+                onChange={e => setReviewText(e.target.value)}
+                placeholder={t('reviewPlaceholder')}
+                style={{ width: '100%', padding: '0.8rem', boxSizing: 'border-box', marginBottom: '0.8rem' }}
+              />
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button className="btn" onClick={() => setShowReviewInput(false)} style={{ flex: 1, background: 'rgba(0,0,0,0.2)', boxShadow: 'none' }}>{t('cancel', 'Cancel')}</button>
+                <button className="btn" onClick={handleTransactionComplete} style={{ flex: 1, background: 'var(--secondary-color)' }}>{t('markCompletedWithReview')}</button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+              <button className="btn" onClick={() => setShowReviewInput(true)} style={{ flex: 1, background: 'var(--secondary-color)', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
+                <Award size={18} /> Mark as Completed
+              </button>
+            </div>
+          )}
+          
           <form onSubmit={handleSend} style={{ display: 'flex', gap: '0.5rem' }}>
             <input 
               type="text" 

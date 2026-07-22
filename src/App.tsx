@@ -6,6 +6,7 @@ import { useAuth } from './useAuth';
 import CreateDemand from './components/CreateDemand';
 import CreateSupply from './components/CreateSupply';
 import ProfileSettings from './components/ProfileSettings';
+import UserProfileView from './components/UserProfileView';
 import NotificationBell from './components/NotificationBell';
 import Feed from './components/Feed';
 import MyPosts from './components/MyPosts';
@@ -183,6 +184,7 @@ function App() {
         <Route path="/create-supply" element={<CreateSupply />} />
         <Route path="/dashboard" element={<MyPosts />} />
         <Route path="/settings" element={<ProfileSettings />} />
+        <Route path="/user/:userId" element={<UserProfileView />} />
         <Route path="/chat/:chatId" element={<Chat />} />
         <Route path="/admin" element={<AdminPanel />} />
       </Routes>

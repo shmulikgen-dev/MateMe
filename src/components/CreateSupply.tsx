@@ -5,10 +5,12 @@ import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'fire
 import { geohashForLocation } from 'geofire-common';
 import { MapPin, Navigation, ArrowLeft, Tags } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../useAuth';
 
 export default function CreateSupply() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const type = 'supply';
   const [category, setCategory] = useState('catOther');
   const [description, setDescription] = useState('');
@@ -41,6 +43,8 @@ export default function CreateSupply() {
 
         const docRef = await addDoc(collection(db, 'posts'), {
           creatorId: auth.currentUser!.uid,
+          creatorAlias: profile?.alias || 'Anonymous',
+          creatorTrustScore: profile?.trustScore || 0,
           type,
           category,
           description,

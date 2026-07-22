@@ -166,6 +166,20 @@ export default function Feed() {
               <MapPin size={12} /> {post.distance.toFixed(1)} {t('kmAway')}
             </span>
           </div>
+
+          <div style={{ marginBottom: '0.8rem', fontSize: '0.9rem' }}>
+            <span style={{ opacity: 0.8 }}>{t('postedBy')} </span>
+            <span 
+              onClick={() => navigate(`/user/${post.creatorId}`)} 
+              style={{ fontWeight: 'bold', color: 'var(--primary-color)', cursor: 'pointer', textDecoration: 'underline' }}
+            >
+              {post.creatorAlias || 'Anonymous'}
+            </span>
+            <span style={{ marginLeft: '0.5rem', fontSize: '0.8rem', opacity: 0.9 }}>
+              (⭐ {post.creatorTrustScore || 0})
+            </span>
+          </div>
+
           {post.category && (
             <div style={{ marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
               <strong>{t('category')}:</strong> {t(post.category)}

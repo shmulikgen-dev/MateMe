@@ -99,7 +99,14 @@
   "notificationPreferences": "Notification Preferences",
   "notificationDesc": "Select the categories you want to be notified about:",
   "notifications": "Notifications",
-  "noNotifications": "No new notifications",
   "settingsSaved": "Settings saved successfully!",
-  "newPostIn": "New post in"
+  "newPostIn": "New post in",
+  "publicProfile": "Public Profile",
+  "trustPoints": "Trust Points",
+  "leaveReview": "Leave a short review",
+  "reviewPlaceholder": "e.g., Fast, reliable, highly recommended!",
+  "completedTransactions": "Completed Transactions",
+  "postedBy": "Posted by:",
+  "noReviewsYet": "No reviews yet.",
+  "markCompletedWithReview": "Complete & Review"
 }
