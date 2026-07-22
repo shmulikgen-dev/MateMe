@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { db, auth } from '../firebase';
+import { db, auth, storage } from '../firebase';
 import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { geohashForLocation } from 'geofire-common';
-import { MapPin, Navigation, ArrowLeft, Tags, Hourglass } from 'lucide-react';
+import { MapPin, Navigation, ArrowLeft, Tags, Hourglass, Paperclip } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../useAuth';
 
@@ -21,6 +22,20 @@ export default function CreateSupply() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
   const [isPopup, setIsPopup] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const selected = e.target.files[0];
+      if (selected.size > 1 * 1024 * 1024) {
+        alert(t('fileTooLarge', 'הקובץ חורג מ-1 מגה-בייט. אנא בחר קובץ קטן יותר.'));
+        e.target.value = '';
+        setFile(null);
+        return;
+      }
+      setFile(selected);
+    }
+  };
 
   // If user sets isPopup to true, force 24h expiration
   const handlePopupToggle = (val: boolean) => {
@@ -48,6 +63,21 @@ export default function CreateSupply() {
         const expiresAt = new Date();
         expiresAt.setHours(expiresAt.getHours() + ttlHours);
 
+        let fileUrl = null;
+        let fileName = null;
+        let fileType = null;
+
+        if (file) {
+          setStatus('Uploading file...');
+          const fileRef = ref(storage, `posts/${auth.currentUser!.uid}_${Date.now()}_${file.name}`);
+          await uploadBytes(fileRef, file);
+          fileUrl = await getDownloadURL(fileRef);
+          fileName = file.name;
+          fileType = file.type;
+        }
+
+        setStatus('Saving post...');
+
         const docRef = await addDoc(collection(db, 'posts'), {
           creatorId: auth.currentUser!.uid,
           creatorAlias: profile?.alias || 'Anonymous',
@@ -63,7 +93,10 @@ export default function CreateSupply() {
           expiresAt: expiresAt.toISOString(),
           status: 'active',
           responseCount: 0,
-          isPopup: isPopup
+          isPopup: isPopup,
+          fileUrl,
+          fileName,
+          fileType
         });
 
         // Fan-out notifications to subscribed users
@@ -161,6 +194,20 @@ export default function CreateSupply() {
           onChange={(e) => setDescription(e.target.value)}
           style={{ width: '100%', minHeight: '120px', marginBottom: '1.5rem', boxSizing: 'border-box' }}
         />
+
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.5rem', cursor: 'pointer' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.8rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px dashed var(--glass-border)' }}>
+              <Paperclip size={18} /> {file ? file.name : t('attachFile', 'הוסף קובץ (תמונה או PDF עד 1MB)')}
+            </span>
+            <input 
+              type="file" 
+              accept="image/png, image/jpeg, image/webp, application/pdf" 
+              onChange={handleFileChange}
+              style={{ display: 'none' }}
+            />
+          </label>
+        </div>
 
         <div style={{ marginBottom: '1.5rem', background: isPopup ? 'rgba(239, 68, 68, 0.1)' : 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', border: isPopup ? '1px solid #ef4444' : '1px solid var(--glass-border)' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer' }}>

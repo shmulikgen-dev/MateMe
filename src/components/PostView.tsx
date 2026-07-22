@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
 import { doc, getDoc, collection, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { ArrowLeft, Share2 } from 'lucide-react';
+import { ArrowLeft, Share2, Paperclip } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function PostView() {
@@ -127,6 +127,18 @@ export default function PostView() {
             {post.targetTime && <div><strong>{t('time')}:</strong> {post.targetTime}</div>}
             {post.availability && <div><strong>{t('availability')}:</strong> {post.availability}</div>}
             {post.budget > 0 && <div><strong>{post.type === 'supply' ? t('startingPrice') : t('budget')}:</strong> ₪{post.budget}</div>}
+          </div>
+        )}
+
+        {post.fileUrl && (
+          <div style={{ marginBottom: '1.5rem' }}>
+            {post.fileType?.startsWith('image/') ? (
+              <img src={post.fileUrl} alt={post.fileName || 'Attached image'} style={{ maxWidth: '100%', borderRadius: '8px', border: '1px solid var(--glass-border)', maxHeight: '400px', objectFit: 'contain' }} />
+            ) : (
+              <a href={post.fileUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', color: 'var(--text-primary)', textDecoration: 'none', border: '1px solid var(--glass-border)' }}>
+                <Paperclip size={18} /> {post.fileName || 'Download Attached File'}
+              </a>
+            )}
           </div>
         )}
 
