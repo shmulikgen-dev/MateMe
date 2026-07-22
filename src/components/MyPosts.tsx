@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
 import { collection, query, where, getDocs, updateDoc, doc, addDoc, deleteDoc, getDoc } from 'firebase/firestore';
-import { ArrowLeft, Inbox, CheckCircle, Trash2 } from 'lucide-react';
+import { ArrowLeft, Inbox, CheckCircle, Trash2, Ghost, PackageOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function MyPosts() {
@@ -173,8 +173,13 @@ export default function MyPosts() {
       {!loading && activeTab === 'posts' && !selectedPostId && (
         <>
           {myPosts.length === 0 && (
-            <div className="glass" style={{ padding: '2rem', textAlign: 'center' }}>
-              <p>{t('noPostsYet')}</p>
+            <div className="glass animate-fade-in" style={{ padding: '3rem 2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', marginTop: '2rem' }}>
+              <div className="animate-float" style={{ width: '70px', height: '70px', borderRadius: '50%', background: 'rgba(99, 102, 241, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-color)' }}>
+                <PackageOpen size={32} />
+              </div>
+              <h3 style={{margin: '0.5rem 0 0 0'}}>{t('noPostsYet')}</h3>
+              <p style={{ margin: 0, opacity: 0.7, fontSize: '0.9rem' }}>When you create a new request or offer, it will appear here.</p>
+              <button className="btn" onClick={() => navigate('/create')} style={{ marginTop: '1rem' }}>{t('newRequest')}</button>
             </div>
           )}
           {myPosts.map(post => (
@@ -229,8 +234,13 @@ export default function MyPosts() {
       {!loading && activeTab === 'offers' && !selectedPostId && (
         <>
           {myOffers.length === 0 && (
-            <div className="glass" style={{ padding: '2rem', textAlign: 'center' }}>
-              <p>{t('noOffersYet')}</p>
+            <div className="glass animate-fade-in" style={{ padding: '3rem 2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', marginTop: '2rem' }}>
+              <div className="animate-float" style={{ width: '70px', height: '70px', borderRadius: '50%', background: 'rgba(244, 63, 94, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-color)' }}>
+                <Ghost size={32} />
+              </div>
+              <h3 style={{margin: '0.5rem 0 0 0'}}>{t('noOffersYet')}</h3>
+              <p style={{ margin: 0, opacity: 0.7, fontSize: '0.9rem' }}>Go to the local feed to find requests you can help with!</p>
+              <button className="btn" onClick={() => navigate('/feed')} style={{ marginTop: '1rem', background: 'var(--accent-color)' }}>{t('viewFeed')}</button>
             </div>
           )}
           {myOffers.map(offer => (

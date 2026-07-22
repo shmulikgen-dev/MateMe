@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Hand } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './useAuth';
 import CreatePost from './components/CreatePost';
@@ -43,6 +44,18 @@ function Home() {
               <span style={{width: 8, height: 8, borderRadius: '50%', background: 'var(--secondary-color)', display: 'inline-block'}}></span>
               {profile?.alias ? `${profile.alias} | ${t('trustScore')}: ${profile.trustScore}` : t('loggedInAs')}
             </p>
+            
+            {profile?.trustScore === 0 && (
+              <div className="animate-float" style={{ background: 'var(--primary-color)', color: 'white', padding: '0.8rem 1rem', borderRadius: '12px', marginBottom: '1.5rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.8rem', position: 'relative', border: '1px solid rgba(255,255,255,0.2)' }}>
+                <div style={{ background: 'rgba(255,255,255,0.2)', padding: '5px', borderRadius: '50%' }}><Hand size={18} /></div>
+                <div style={{ textAlign: 'left' }}>
+                  <strong>{t('welcomeTooltipTitle')} 👋</strong>
+                  <div style={{opacity: 0.9}}>{t('welcomeTooltipDesc')}</div>
+                </div>
+                <div style={{ position: 'absolute', bottom: '-8px', left: '25%', width: '15px', height: '15px', background: 'var(--primary-color)', transform: 'rotate(45deg)', borderRight: '1px solid rgba(255,255,255,0.2)', borderBottom: '1px solid rgba(255,255,255,0.2)' }}></div>
+              </div>
+            )}
+
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginBottom: '1rem' }}>
               <button className="btn" onClick={() => navigate('/create')} style={{ flex: 1, padding: '1rem' }}>
                 {t('newRequest')}

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
 import { collection, query, where, getDocs, updateDoc, doc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { geohashQueryBounds, distanceBetween } from 'geofire-common';
-import { MapPin, ArrowLeft } from 'lucide-react';
+import { MapPin, ArrowLeft, SearchX } from 'lucide-react';
 
 export default function Feed() {
   const { t } = useTranslation();
@@ -137,12 +137,17 @@ export default function Feed() {
       {loading && <p>{t('loadingPosts')}</p>}
       
       {!loading && posts.length === 0 && (
-        <div className="glass animate-fade-in" style={{ padding: '3rem 2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <MapPin size={30} color="var(--text-secondary)" />
+        <div className="glass animate-fade-in" style={{ padding: '4rem 2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', marginTop: '2rem' }}>
+          <div className="animate-float" style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--glass-bg)', border: '2px dashed var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+            <SearchX size={40} />
           </div>
-          <h3 style={{margin: 0}}>{t('quietHere')}</h3>
-          <p style={{ margin: 0 }}>{t('noRequestsInArea')}</p>
+          <div>
+            <h3 style={{margin: '0 0 0.5rem 0', fontSize: '1.5rem'}}>{t('quietHere')}</h3>
+            <p style={{ margin: 0, opacity: 0.8 }}>{t('noRequestsInArea')}</p>
+          </div>
+          <button className="btn animate-pulse-glow" onClick={() => navigate('/create')} style={{ marginTop: '1rem' }}>
+            {t('newRequest')}
+          </button>
         </div>
       )}
 
