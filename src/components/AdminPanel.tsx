@@ -60,6 +60,18 @@ export default function AdminPanel() {
         <Shield /> Administrator Control Panel
       </h1>
 
+      {/* STATS OVERVIEW */}
+      <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
+        <div className="glass" style={{ flex: 1, padding: '1.5rem', borderRadius: '12px', textAlign: 'center' }}>
+          <h2 style={{ margin: 0, fontSize: '2.5rem', color: 'var(--primary-color)' }}>{users.length}</h2>
+          <p style={{ margin: '0.5rem 0 0 0', opacity: 0.8 }}>Total Registered Users</p>
+        </div>
+        <div className="glass" style={{ flex: 1, padding: '1.5rem', borderRadius: '12px', textAlign: 'center' }}>
+          <h2 style={{ margin: 0, fontSize: '2.5rem', color: 'var(--secondary-color)' }}>{posts.length}</h2>
+          <p style={{ margin: '0.5rem 0 0 0', opacity: 0.8 }}>Total Active Posts</p>
+        </div>
+      </div>
+
       <div style={{ display: 'flex', gap: '2rem', marginTop: '2rem', flexWrap: 'wrap' }}>
         
         {/* USERS TABLE */}

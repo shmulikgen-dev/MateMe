@@ -1,78 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
-import { collection, query, where, getDocs, updateDoc, doc, addDoc, serverTimestamp } from 'firebase/firestore';
-import { geohashQueryBounds, distanceBetween } from 'geofire-common';
+import { collection, doc, addDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { MapPin, ArrowLeft, SearchX } from 'lucide-react';
+import { useFeed } from '../useFeed';
 
 export default function Feed() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [posts, setPosts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
+  const { posts, setPosts, loading, location } = useFeed();
 
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        setLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        });
-      });
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!location) return;
-
-    const fetchNearbyPosts = async () => {
-      setLoading(true);
-      const radiusInM = 10 * 1000; // Search within 10km for the feed
-      const center = [location.lat, location.lng] as [number, number];
-      const bounds = geohashQueryBounds(center, radiusInM);
-      const promises = [];
-
-      for (const b of bounds) {
-        const q = query(
-          collection(db, 'posts'),
-          where('location.geohash', '>=', b[0]),
-          where('location.geohash', '<=', b[1]),
-          where('status', 'in', ['active', 'tender'])
-        );
-        promises.push(getDocs(q));
-      }
-
-      const snapshots = await Promise.all(promises);
-      const matchingDocs: any[] = [];
-      const now = new Date().toISOString();
-
-      for (const snap of snapshots) {
-        for (const doc of snap.docs) {
-          const data = doc.data();
-          
-          // TTL Check: Ignore if expired
-          if (data.expiresAt && data.expiresAt < now) continue;
-
-          const lat = data.location.lat;
-          const lng = data.location.lng;
-          const distanceInKm = distanceBetween([lat, lng], center);
-          
-          if (distanceInKm <= data.radius) {
-            matchingDocs.push({ id: doc.id, ...data, distance: distanceInKm });
-          }
-        }
-      }
-
-      // Sort by closest
-      matchingDocs.sort((a, b) => a.distance - b.distance);
-      setPosts(matchingDocs);
-      setLoading(false);
-    };
-
-    fetchNearbyPosts();
-  }, [location]);
 
   const [bids, setBids] = useState<{[key: string]: string}>({});
 
