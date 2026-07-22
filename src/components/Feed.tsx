@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
 import { collection, query, where, getDocs, updateDoc, doc, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -6,6 +7,7 @@ import { geohashQueryBounds, distanceBetween } from 'geofire-common';
 import { MapPin, ArrowLeft } from 'lucide-react';
 
 export default function Feed() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -80,7 +82,7 @@ export default function Feed() {
       
       const bidAmount = isTender ? Number(bids[postId]) : null;
       if (isTender && (!bidAmount || bidAmount <= 0)) {
-        alert("Please enter a valid bid amount.");
+        alert(t('pleaseEnterValidBid'));
         return;
       }
 
@@ -113,34 +115,34 @@ export default function Feed() {
         return p;
       }).filter(p => p.status === 'active' || p.status === 'tender'));
       
-      alert(isTender ? 'Bid submitted successfully!' : 'Connection sent successfully!');
+      alert(isTender ? t('bidSubmitted') : t('connectionSent'));
     } catch (error) {
       console.error("Error connecting: ", error);
-      alert('Failed to connect');
+      alert(t('failedConnect'));
     }
   };
 
-  if (!location) return <div style={{ textAlign: 'center', padding: '2rem' }}>Looking for your location...</div>;
+  if (!location) return <div style={{ textAlign: 'center', padding: '2rem' }}>{t('lookingForLocation')}</div>;
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '1rem' }}>
       <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginBottom: '1rem' }}>
-        <ArrowLeft size={20} /> Back to Home
+        <ArrowLeft size={20} /> {t('backToHome')}
       </button>
 
       <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <MapPin /> Local Community Feed
+        <MapPin /> {t('localFeed')}
       </h2>
       
-      {loading && <p>Loading local posts...</p>}
+      {loading && <p>{t('loadingPosts')}</p>}
       
       {!loading && posts.length === 0 && (
         <div className="glass animate-fade-in" style={{ padding: '3rem 2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
           <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <MapPin size={30} color="var(--text-secondary)" />
           </div>
-          <h3 style={{margin: 0}}>It's quiet around here...</h3>
-          <p style={{ margin: 0 }}>No requests or offers in your area yet.</p>
+          <h3 style={{margin: 0}}>{t('quietHere')}</h3>
+          <p style={{ margin: 0 }}>{t('noRequestsInArea')}</p>
         </div>
       )}
 
@@ -148,19 +150,19 @@ export default function Feed() {
         <div key={post.id} className="glass animate-fade-in" style={{ padding: '1.5rem', marginBottom: '1.2rem', animationDelay: `${index * 0.1}s`, borderRight: `4px solid ${post.type === 'demand' ? 'var(--primary-color)' : 'var(--secondary-color)'}` }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'center' }}>
             <span style={{ fontWeight: '600', letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.75rem', padding: '4px 10px', borderRadius: '20px', background: post.type === 'demand' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(16, 185, 129, 0.15)', color: post.type === 'demand' ? '#a5b4fc' : '#6ee7b7' }}>
-              {post.type}
+              {t(post.type)}
             </span>
             <span style={{ fontSize: '0.8rem', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <MapPin size={12} /> {post.distance.toFixed(1)} km
+              <MapPin size={12} /> {post.distance.toFixed(1)} {t('kmAway')}
             </span>
           </div>
           <p style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', lineHeight: '1.6' }}>{post.description}</p>
           
           {(post.targetDate || post.targetTime || post.budget > 0) && (
             <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.8rem', borderRadius: '8px', marginBottom: '1.5rem', display: 'flex', gap: '1rem', fontSize: '0.85rem' }}>
-              {post.targetDate && <div><strong>Date:</strong> {post.targetDate}</div>}
-              {post.targetTime && <div><strong>Time:</strong> {post.targetTime}</div>}
-              {post.budget > 0 && <div><strong>Budget:</strong> ₪{post.budget}</div>}
+              {post.targetDate && <div><strong>{t('date')}:</strong> {post.targetDate}</div>}
+              {post.targetTime && <div><strong>{t('time')}:</strong> {post.targetTime}</div>}
+              {post.budget > 0 && <div><strong>{t('budget')}:</strong> ₪{post.budget}</div>}
             </div>
           )}
 
@@ -168,7 +170,7 @@ export default function Feed() {
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <input 
                 type="number" 
-                placeholder="Your Bid (₪)" 
+                placeholder={t('yourBid')} 
                 value={bids[post.id] || ''}
                 onChange={e => setBids({...bids, [post.id]: e.target.value})}
                 style={{ flex: 1, padding: '0.8rem', boxSizing: 'border-box' }}
@@ -178,7 +180,7 @@ export default function Feed() {
                 onClick={() => handleConnect(post.id, post.responseCount || 0, true)}
                 style={{ flex: 1, background: 'var(--accent-color)' }}
               >
-                Submit Bid
+                {t('submitBid')}
               </button>
             </div>
           ) : (
@@ -187,7 +189,7 @@ export default function Feed() {
               onClick={() => handleConnect(post.id, post.responseCount || 0, false)}
               style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', boxShadow: 'none' }}
             >
-              Connect ({post.responseCount || 0}/3)
+              {t('connectCount', { count: post.responseCount || 0 })}
             </button>
           )}
         </div>
