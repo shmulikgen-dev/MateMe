@@ -7,20 +7,21 @@ import { useAuth } from '../useAuth';
 import type { UserProfile } from '../useAuth';
 
 export default function AdminPanel() {
-  const { profile } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return;
     if (profile?.role !== 'admin') {
       alert("Unauthorized Access");
       navigate('/');
       return;
     }
     fetchData();
-  }, [profile, navigate]);
+  }, [profile, authLoading, navigate]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -48,7 +49,7 @@ export default function AdminPanel() {
     }
   };
 
-  if (loading) return <div style={{padding: '2rem', textAlign: 'center'}}>Loading Admin Panel...</div>;
+  if (loading || authLoading) return <div style={{padding: '2rem', textAlign: 'center'}}>Loading Admin Panel...</div>;
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
