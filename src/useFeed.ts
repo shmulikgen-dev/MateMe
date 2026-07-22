@@ -68,8 +68,11 @@ export function useFeed(radiusKm: number = 150) {
           }
         }
       }
-
-      matchingDocs.sort((a, b) => a.distance - b.distance);
+      matchingDocs.sort((a, b) => {
+        if (a.isPopup && !b.isPopup) return -1;
+        if (!a.isPopup && b.isPopup) return 1;
+        return a.distance - b.distance;
+      });
       setPosts(matchingDocs);
     } catch (err) {
       console.error("Error fetching feed: ", err);

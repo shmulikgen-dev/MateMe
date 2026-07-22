@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
 import { collection, doc, addDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { MapPin, ArrowLeft, SearchX, Share2, Flag } from 'lucide-react';
+import { MapPin, ArrowLeft, SearchX, Share2, Flag, Hourglass } from 'lucide-react';
 import { useFeed } from '../useFeed';
 
 interface FeedProps {
@@ -142,11 +142,25 @@ export default function Feed({ embedded = false }: FeedProps) {
       )}
 
       {displayedPosts.map((post, index) => (
-        <div key={post.id} className="glass animate-fade-in" style={{ padding: '1.5rem', marginBottom: '1.2rem', animationDelay: `${index * 0.1}s`, borderRight: `4px solid ${post.type === 'demand' ? 'var(--primary-color)' : 'var(--secondary-color)'}` }}>
+        <div key={post.id} className="glass animate-fade-in" style={{ 
+            padding: '1.5rem', 
+            marginBottom: '1.2rem', 
+            animationDelay: `${index * 0.1}s`, 
+            borderRight: post.isPopup ? 'none' : `4px solid ${post.type === 'demand' ? 'var(--primary-color)' : 'var(--secondary-color)'}`,
+            border: post.isPopup ? '2px solid #ef4444' : '1px solid var(--glass-border)',
+            boxShadow: post.isPopup ? '0 0 15px rgba(239, 68, 68, 0.3)' : 'none'
+          }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'center' }}>
-            <span style={{ fontWeight: '600', letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.75rem', padding: '4px 10px', borderRadius: '20px', background: post.type === 'demand' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(16, 185, 129, 0.15)', color: post.type === 'demand' ? '#a5b4fc' : '#6ee7b7' }}>
-              {t(post.type)}
-            </span>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <span style={{ fontWeight: '600', letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.75rem', padding: '4px 10px', borderRadius: '20px', background: post.type === 'demand' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(16, 185, 129, 0.15)', color: post.type === 'demand' ? '#a5b4fc' : '#6ee7b7' }}>
+                {t(post.type)}
+              </span>
+              {post.isPopup && (
+                <span style={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', padding: '4px 10px', borderRadius: '20px', background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }}>
+                  <Hourglass size={12} className="animate-pulse-glow" /> POP-UP
+                </span>
+              )}
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
               <span style={{ fontSize: '0.8rem', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <MapPin size={12} /> {post.distance.toFixed(1)} {t('kmAway')}

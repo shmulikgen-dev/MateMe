@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
 import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
 import { geohashForLocation } from 'geofire-common';
-import { MapPin, Navigation, ArrowLeft, Tags } from 'lucide-react';
+import { MapPin, Navigation, ArrowLeft, Tags, Hourglass } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../useAuth';
 
@@ -20,6 +20,13 @@ export default function CreateSupply() {
   const [budget, setBudget] = useState('');
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
+  const [isPopup, setIsPopup] = useState(false);
+
+  // If user sets isPopup to true, force 24h expiration
+  const handlePopupToggle = (val: boolean) => {
+    setIsPopup(val);
+    if (val) setTtlHours(24);
+  };
 
   const handleCreate = async () => {
     if (!description || !auth.currentUser) return;
@@ -55,7 +62,8 @@ export default function CreateSupply() {
           createdAt: serverTimestamp(),
           expiresAt: expiresAt.toISOString(),
           status: 'active',
-          responseCount: 0
+          responseCount: 0,
+          isPopup: isPopup
         });
 
         // Fan-out notifications to subscribed users
@@ -80,6 +88,25 @@ export default function CreateSupply() {
             }
           });
           
+          // Special Pop-up Push
+          if (isPopup) {
+            // In a real app we'd do a geo-query here to alert nearby users.
+            // For MVP, we'll alert all users (or we could limit it).
+            const allUsersSnap = await getDocs(collection(db, 'users'));
+            allUsersSnap.forEach(userDoc => {
+              if (userDoc.id !== auth.currentUser!.uid) {
+                notifPromises.push(addDoc(collection(db, 'notifications'), {
+                  userId: userDoc.id,
+                  postId: docRef.id,
+                  type: 'popup',
+                  message: `🚨 ${t('popupAlert', 'אירוע פופ-אפ חדש באזור שלך')}!`,
+                  read: false,
+                  createdAt: serverTimestamp()
+                }));
+              }
+            });
+          }
+
           await Promise.all(notifPromises);
         } catch (notifErr) {
           console.error("Error sending notifications: ", notifErr);
@@ -135,6 +162,25 @@ export default function CreateSupply() {
           style={{ width: '100%', minHeight: '120px', marginBottom: '1.5rem', boxSizing: 'border-box' }}
         />
 
+        <div style={{ marginBottom: '1.5rem', background: isPopup ? 'rgba(239, 68, 68, 0.1)' : 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', border: isPopup ? '1px solid #ef4444' : '1px solid var(--glass-border)' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer' }}>
+            <input 
+              type="checkbox" 
+              checked={isPopup} 
+              onChange={(e) => handlePopupToggle(e.target.checked)} 
+              style={{ width: '20px', height: '20px', accentColor: '#ef4444' }}
+            />
+            <span style={{ fontWeight: 'bold', color: isPopup ? '#ef4444' : 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Hourglass size={18} /> {t('makePopup', 'הפוך לאירוע פופ-אפ (24 שעות)')}
+            </span>
+          </label>
+          {isPopup && (
+            <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem', color: '#fca5a5' }}>
+              {t('popupDesc', 'אירועי פופ-אפ מיועדים למתן שירות מהיר וזמני על הדרך. הם בולטים בפיד ויש להם תפוגה קצרה (עד 24 שעות).')}
+            </p>
+          )}
+        </div>
+
         <div style={{ marginBottom: '1.5rem' }}>
           <label style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
             <span><MapPin size={16} style={{verticalAlign: 'middle', marginRight: '5px'}}/> {t('broadcastRadius')}</span>
@@ -164,7 +210,8 @@ export default function CreateSupply() {
           <select 
             value={ttlHours} 
             onChange={(e) => setTtlHours(Number(e.target.value))}
-            style={{ width: '100%', padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', cursor: 'pointer' }}
+            disabled={isPopup}
+            style={{ width: '100%', padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', cursor: isPopup ? 'not-allowed' : 'pointer', opacity: isPopup ? 0.7 : 1 }}
           >
             <option value={1}>{t('hour1')}</option>
             <option value={24}>{t('hours24')}</option>
