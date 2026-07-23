@@ -8,7 +8,7 @@ export interface Location {
   lng: number;
 }
 
-export function useFeed(radiusKm: number = 150) {
+export function useFeed(radiusKm: number = 150, communityId?: string) {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [location, setLocation] = useState<Location | null>(null);
@@ -40,12 +40,15 @@ export function useFeed(radiusKm: number = 150) {
       const promises = [];
 
       for (const b of bounds) {
-        const q = query(
+        let q = query(
           collection(db, 'posts'),
           where('location.geohash', '>=', b[0]),
           where('location.geohash', '<=', b[1]),
           where('status', 'in', ['active', 'tender'])
         );
+        if (communityId) {
+          q = query(q, where('communityId', '==', communityId));
+        }
         promises.push(getDocs(q));
       }
 
@@ -58,6 +61,9 @@ export function useFeed(radiusKm: number = 150) {
           const data = doc.data();
           
           if (data.expiresAt && data.expiresAt < now) continue;
+          
+          // Filter out community posts if we are in the global feed
+          if (!communityId && data.communityId && data.communityId !== 'global') continue;
 
           const lat = data.location.lat;
           const lng = data.location.lng;
@@ -83,7 +89,7 @@ export function useFeed(radiusKm: number = 150) {
   useEffect(() => {
     fetchPosts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location, radiusKm]);
+  }, [location, radiusKm, communityId]);
 
   // Exposing fetchPosts so it can be called manually if needed (e.g. after connection/bid)
   return { posts, loading, location, setPosts, fetchPosts };

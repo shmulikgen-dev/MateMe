@@ -14,6 +14,9 @@ import Chat from './components/Chat';
 import Inbox from './components/Inbox';
 import AdminPanel from './components/AdminPanel';
 import PostView from './components/PostView';
+import MyCommunities from './components/MyCommunities';
+import JoinCommunity from './components/JoinCommunity';
+import CommunityView from './components/CommunityView';
 import './i18n';
 import './App.css';
 
@@ -90,6 +93,10 @@ function Home() {
           
           <div className="glass" style={{ padding: '1rem' }}>
             <Feed embedded={true} />
+          </div>
+
+          <div className="glass" style={{ padding: '1rem', marginTop: '2rem' }}>
+            <MyCommunities />
           </div>
 
           <div className="glass" style={{ padding: '2rem', marginTop: '2rem' }}>
@@ -196,6 +203,8 @@ function App() {
         <Route path="/post/:id" element={<PostView />} />
         <Route path="/chat/:chatId" element={<Chat />} />
         <Route path="/admin" element={<AdminPanel />} />
+        <Route path="/join/:id" element={<JoinCommunity />} />
+        <Route path="/community/:id" element={<CommunityView />} />
       </Routes>
     </>
   );

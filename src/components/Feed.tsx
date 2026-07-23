@@ -2,18 +2,20 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
-import { collection, doc, addDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { MapPin, ArrowLeft, SearchX, Share2, Flag, Hourglass, Paperclip } from 'lucide-react';
+import { collection, doc, addDoc, serverTimestamp, updateDoc, deleteDoc } from 'firebase/firestore';
+import { MapPin, ArrowLeft, SearchX, Share2, Flag, Hourglass, Paperclip, Trash2 } from 'lucide-react';
 import { useFeed } from '../useFeed';
 
 interface FeedProps {
   embedded?: boolean;
+  communityId?: string;
+  isManager?: boolean;
 }
 
-export default function Feed({ embedded = false }: FeedProps) {
+export default function Feed({ embedded = false, communityId, isManager = false }: FeedProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { posts, setPosts, loading, location } = useFeed();
+  const { posts, setPosts, loading, location } = useFeed(150, communityId);
   const [showAll, setShowAll] = useState(!embedded);
   const [bids, setBids] = useState<{[key: string]: string}>({});
   const [reportModal, setReportModal] = useState<{isOpen: boolean, postId: string}>({isOpen: false, postId: ''});
@@ -53,6 +55,18 @@ export default function Feed({ embedded = false }: FeedProps) {
       setReportReason('');
     } catch (error) {
       console.error('Error reporting:', error);
+      alert(t('errorOccurred', 'אירעה שגיאה'));
+    }
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    if (!window.confirm(t('confirmDelete', 'האם אתה בטוח שברצונך למחוק פוסט זה?'))) return;
+    try {
+      await deleteDoc(doc(db, 'posts', postId));
+      setPosts(posts.filter(p => p.id !== postId));
+      alert(t('postDeleted', 'הפוסט נמחק בהצלחה'));
+    } catch (error) {
+      console.error('Error deleting post:', error);
       alert(t('errorOccurred', 'אירעה שגיאה'));
     }
   };
@@ -171,6 +185,11 @@ export default function Feed({ embedded = false }: FeedProps) {
               <button onClick={() => setReportModal({isOpen: true, postId: post.id})} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0 }}>
                 <Flag size={16} />
               </button>
+              {isManager && (
+                <button onClick={() => handleDeletePost(post.id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0 }}>
+                  <Trash2 size={16} />
+                </button>
+              )}
             </div>
           </div>
 

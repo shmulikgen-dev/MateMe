@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { db, auth, storage } from '../firebase';
 import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -12,6 +12,10 @@ export default function CreateSupply() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { profile } = useAuth();
+  const locationState = useLocation();
+  const queryParams = new URLSearchParams(locationState.search);
+  const communityId = queryParams.get('communityId');
+  
   const type = 'supply';
   const [category, setCategory] = useState('catOther');
   const [description, setDescription] = useState('');
@@ -78,7 +82,7 @@ export default function CreateSupply() {
 
         setStatus('Saving post...');
 
-        const docRef = await addDoc(collection(db, 'posts'), {
+        const postData: any = {
           creatorId: auth.currentUser!.uid,
           creatorAlias: profile?.alias || 'Anonymous',
           creatorTrustScore: profile?.trustScore || 0,
@@ -97,7 +101,13 @@ export default function CreateSupply() {
           fileUrl,
           fileName,
           fileType
-        });
+        };
+
+        if (communityId) {
+          postData.communityId = communityId;
+        }
+
+        const docRef = await addDoc(collection(db, 'posts'), postData);
 
         // Fan-out notifications to subscribed users
         try {
@@ -146,7 +156,7 @@ export default function CreateSupply() {
         }
 
         setStatus(t('postSuccess'));
-        setTimeout(() => navigate('/feed'), 2000);
+        setTimeout(() => navigate(communityId ? `/community/${communityId}` : '/feed'), 2000);
       } catch (err) {
         console.error(err);
         setStatus('Error creating post.');

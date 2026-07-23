@@ -12,9 +12,14 @@ export default function AdminPanel() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
+  const [communities, setCommunities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [replyText, setReplyText] = useState('');
   const [selectedReport, setSelectedReport] = useState<any>(null);
+  const [newCommunityName, setNewCommunityName] = useState('');
+  const [newCommunityDesc, setNewCommunityDesc] = useState('');
+  const [newCommunityType, setNewCommunityType] = useState<'geographic' | 'thematic'>('geographic');
+  const [managerUserId, setManagerUserId] = useState('');
 
   useEffect(() => {
     if (authLoading) return;
@@ -40,6 +45,10 @@ export default function AdminPanel() {
     const q = query(collection(db, 'reports'), where('status', '==', 'open'));
     const reportsSnap = await getDocs(q);
     setReports(reportsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+    
+    // Fetch Communities
+    const commSnap = await getDocs(collection(db, 'communities'));
+    setCommunities(commSnap.docs.map(d => ({ id: d.id, ...d.data() })));
     
     setLoading(false);
   };
@@ -87,6 +96,45 @@ export default function AdminPanel() {
     if (window.confirm("Delete this post?")) {
       await deleteDoc(doc(db, 'posts', postId));
       fetchData();
+    }
+  };
+
+  const handleCreateCommunity = async () => {
+    if (!newCommunityName) return;
+    try {
+      await addDoc(collection(db, 'communities'), {
+        name: newCommunityName,
+        description: newCommunityDesc,
+        type: newCommunityType,
+        managerIds: [],
+        memberIds: [],
+        createdAt: Date.now()
+      });
+      setNewCommunityName('');
+      setNewCommunityDesc('');
+      fetchData();
+      alert('Community created!');
+    } catch (e) {
+      console.error(e);
+      alert('Error creating community');
+    }
+  };
+
+  const handleAssignManager = async (communityId: string) => {
+    if (!managerUserId) return;
+    try {
+      const comm = communities.find(c => c.id === communityId);
+      if (!comm) return;
+      const updatedManagers = [...(comm.managerIds || []), managerUserId];
+      await updateDoc(doc(db, 'communities', communityId), {
+        managerIds: Array.from(new Set(updatedManagers))
+      });
+      setManagerUserId('');
+      fetchData();
+      alert('Manager assigned!');
+    } catch (e) {
+      console.error(e);
+      alert('Error assigning manager');
     }
   };
 
@@ -194,6 +242,40 @@ export default function AdminPanel() {
                 <button onClick={() => handleDeletePost(p.id)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>
                   <Trash2 size={18} />
                 </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* COMMUNITIES MANAGEMENT */}
+        <div className="glass" style={{ width: '100%', padding: '1rem', borderRadius: '12px', marginTop: '2rem' }}>
+          <h3>Communities Management</h3>
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px' }}>
+              <h4>Create New Community</h4>
+              <input type="text" placeholder="Community Name" value={newCommunityName} onChange={e => setNewCommunityName(e.target.value)} style={{ width: '100%', padding: '0.8rem', marginBottom: '0.5rem', boxSizing: 'border-box' }} />
+              <input type="text" placeholder="Description" value={newCommunityDesc} onChange={e => setNewCommunityDesc(e.target.value)} style={{ width: '100%', padding: '0.8rem', marginBottom: '0.5rem', boxSizing: 'border-box' }} />
+              <select value={newCommunityType} onChange={e => setNewCommunityType(e.target.value as any)} style={{ width: '100%', padding: '0.8rem', marginBottom: '1rem', boxSizing: 'border-box', background: 'rgba(0,0,0,0.3)', color: 'white' }}>
+                <option value="geographic">Geographic</option>
+                <option value="thematic">Thematic</option>
+              </select>
+              <button className="btn" onClick={handleCreateCommunity} style={{ width: '100%', background: 'var(--primary-color)' }}>Create Community</button>
+            </div>
+          </div>
+          
+          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+            {communities.map(c => (
+              <div key={c.id} style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', marginBottom: '1rem', borderRadius: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <strong>{c.name} ({c.type})</strong>
+                  <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>Members: {c.memberIds?.length || 0}</span>
+                </div>
+                <p style={{ margin: '0.5rem 0', fontSize: '0.9rem', opacity: 0.8 }}>{c.description}</p>
+                <div style={{ fontSize: '0.8rem', marginBottom: '0.5rem' }}>Managers: {c.managerIds?.join(', ') || 'None'}</div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input type="text" placeholder="User ID to assign as manager" value={managerUserId} onChange={e => setManagerUserId(e.target.value)} style={{ padding: '0.5rem', flex: 1 }} />
+                  <button className="btn" onClick={() => handleAssignManager(c.id)} style={{ padding: '0.5rem 1rem' }}>Assign</button>
+                </div>
               </div>
             ))}
           </div>
