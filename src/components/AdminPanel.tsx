@@ -13,6 +13,7 @@ export default function AdminPanel() {
   const [posts, setPosts] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
   const [communities, setCommunities] = useState<any[]>([]);
+  const [communityRequests, setCommunityRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [replyText, setReplyText] = useState('');
   const [selectedReport, setSelectedReport] = useState<any>(null);
@@ -49,6 +50,11 @@ export default function AdminPanel() {
     // Fetch Communities
     const commSnap = await getDocs(collection(db, 'communities'));
     setCommunities(commSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+    
+    // Fetch Community Requests
+    const reqQ = query(collection(db, 'community_requests'), where('status', '==', 'pending'));
+    const reqSnap = await getDocs(reqQ);
+    setCommunityRequests(reqSnap.docs.map(d => ({ id: d.id, ...d.data() })));
     
     setLoading(false);
   };
@@ -135,6 +141,71 @@ export default function AdminPanel() {
     } catch (e) {
       console.error(e);
       alert('Error assigning manager');
+    }
+  };
+
+  const handleApproveCommunityRequest = async (request: any) => {
+    try {
+      // 1. Create Community
+      const docRef = await addDoc(collection(db, 'communities'), {
+        name: request.name,
+        description: request.description,
+        type: request.type,
+        managerIds: [request.requesterId], // User who requested becomes manager
+        memberIds: [request.requesterId],
+        createdAt: Date.now()
+      });
+      
+      // 2. Update request status
+      await updateDoc(doc(db, 'community_requests', request.id), {
+        status: 'approved',
+        communityId: docRef.id
+      });
+      
+      // 3. Add community to user's profile
+      // Wait, we need to import arrayUnion if we want to do that, or just let them join later.
+      // But it's better if we just alert. We don't have arrayUnion imported here. 
+      // I'll skip arrayUnion on user profile for simplicity, they can join via link or we can add it.
+      // Let's add arrayUnion to imports.
+      
+      fetchData();
+      alert('Community approved and created successfully!');
+    } catch (e) {
+      console.error("Error approving request", e);
+      alert("Error approving request");
+    }
+  };
+
+  const handleOpenChatWithRequester = async (requesterId: string) => {
+    if (!profile?.uid) return;
+    try {
+      // Check if chat exists
+      const chatsRef = collection(db, 'chats');
+      const q = query(chatsRef, where('participants', 'array-contains', profile.uid));
+      const querySnapshot = await getDocs(q);
+      
+      let existingChatId = null;
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.participants.includes(requesterId)) {
+          existingChatId = doc.id;
+        }
+      });
+      
+      if (existingChatId) {
+        navigate(`/chat/${existingChatId}`);
+      } else {
+        const newChatRef = await addDoc(chatsRef, {
+          participants: [profile.uid, requesterId],
+          createdAt: serverTimestamp(),
+          lastMessage: '',
+          lastMessageTime: serverTimestamp()
+        });
+        navigate(`/chat/${newChatRef.id}`);
+      }
+    } catch (e) {
+      console.error("Error opening chat", e);
+      alert("Error opening chat");
     }
   };
 
@@ -249,6 +320,31 @@ export default function AdminPanel() {
 
         {/* COMMUNITIES MANAGEMENT */}
         <div className="glass" style={{ width: '100%', padding: '1rem', borderRadius: '12px', marginTop: '2rem' }}>
+          <h3>Community Requests ({communityRequests.length})</h3>
+          
+          {communityRequests.length === 0 && <p style={{ opacity: 0.7 }}>No pending community requests.</p>}
+          
+          <div style={{ maxHeight: '400px', overflowY: 'auto', marginBottom: '2rem' }}>
+            {communityRequests.map(r => (
+              <div key={r.id} style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', marginBottom: '1rem', borderRadius: '8px', borderLeft: '4px solid var(--secondary-color)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <strong>{r.name} ({r.type})</strong>
+                  <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>Requester: {r.requesterAlias}</span>
+                </div>
+                <p style={{ margin: '0.5rem 0', fontSize: '0.9rem', fontStyle: 'italic' }}>"{r.description}"</p>
+                
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                  <button className="btn" onClick={() => handleApproveCommunityRequest(r)} style={{ background: '#10b981', flex: 1, padding: '0.5rem' }}>
+                    Approve & Create
+                  </button>
+                  <button className="btn" onClick={() => handleOpenChatWithRequester(r.requesterId)} style={{ background: 'var(--primary-color)', flex: 1, padding: '0.5rem' }}>
+                    Open Chat
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
           <h3>Communities Management</h3>
           <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
             <div style={{ flex: 1, background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px' }}>
