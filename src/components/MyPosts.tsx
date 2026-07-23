@@ -104,8 +104,36 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
       return { id: responseDoc.id, ...respData, post: postData };
     }));
     
+    // Sort offers: pending and accepted first, rejected last
+    const statusOrder: Record<string, number> = { 'accepted': 1, 'pending': 2, 'rejected': 3 };
+    offersData.sort((a: any, b: any) => (statusOrder[a.status] || 9) - (statusOrder[b.status] || 9));
+
     setMyOffers(offersData);
     setLoading(false);
+  };
+
+  const handleDeleteOffer = async (offerId: string, postId?: string) => {
+    if (window.confirm(t('confirmDelete', 'האם אתה בטוח שברצונך למחוק/לבטל פנייה זו?'))) {
+      try {
+        await deleteDoc(doc(db, 'responses', offerId));
+        if (postId) {
+          const postRef = doc(db, 'posts', postId);
+          const postSnap = await getDoc(postRef);
+          if (postSnap.exists()) {
+            const currentCount = postSnap.data().responseCount || 0;
+            const newCount = Math.max(0, currentCount - 1);
+            const updates: any = { responseCount: newCount };
+            if (newCount < 3 && postSnap.data().status === 'evaluating') {
+              updates.status = 'active';
+            }
+            await updateDoc(postRef, updates);
+          }
+        }
+        fetchMyOffers();
+      } catch (e) {
+        console.error("Error deleting offer: ", e);
+      }
+    }
   };
 
   const viewResponses = async (postId: string) => {
@@ -300,22 +328,22 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
         <>
           {myOffers.length === 0 && (
             <div className="glass animate-fade-in" style={{ padding: '3rem 2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', marginTop: '2rem' }}>
-              <div className="animate-float" style={{ width: '70px', height: '70px', borderRadius: '50%', background: 'rgba(244, 63, 94, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-color)' }}>
+              <div className="animate-float" style={{ width: '70px', height: '70px', borderRadius: '50%', background: 'rgba(99, 102, 241, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-color)' }}>
                 <Ghost size={32} />
               </div>
               <h3 style={{margin: '0.5rem 0 0 0'}}>{t('noOffersYet')}</h3>
               <p style={{ margin: 0, opacity: 0.7, fontSize: '0.9rem' }}>Go to the local feed to find requests you can help with!</p>
-              <button className="btn" onClick={() => navigate('/feed')} style={{ marginTop: '1rem', background: 'var(--accent-color)' }}>{t('viewFeed')}</button>
+              <button className="btn" onClick={() => navigate('/feed')} style={{ marginTop: '1rem', background: 'var(--primary-color)' }}>{t('viewFeed')}</button>
             </div>
           )}
           {myOffers.map(offer => (
-            <div key={offer.id} className="glass animate-fade-in" style={{ padding: '1.5rem', marginBottom: '1rem', borderLeft: `4px solid var(--accent-color)` }}>
+            <div key={offer.id} className="glass animate-fade-in" style={{ padding: '1.5rem', marginBottom: '1rem', borderLeft: `4px solid ${offer.status === 'rejected' ? 'var(--accent-color)' : 'var(--primary-color)'}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', alignItems: 'center' }}>
-                <span style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.8rem', color: 'var(--accent-color)' }}>
+                <span style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.8rem', color: offer.status === 'rejected' ? 'var(--accent-color)' : 'var(--primary-color)' }}>
                   {offer.bidAmount ? `${t('yourBid')} ₪${offer.bidAmount}` : t('myOffers')}
                 </span>
                 <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.8rem', padding: '4px 10px', borderRadius: '12px', background: offer.status === 'accepted' ? 'rgba(83, 194, 139, 0.2)' : (offer.status === 'rejected' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 165, 0, 0.2)'), color: offer.status === 'accepted' ? '#6ee7b7' : (offer.status === 'rejected' ? '#fca5a5' : '#fcd34d') }}>
+                  <span style={{ fontSize: '0.8rem', padding: '4px 10px', borderRadius: '12px', background: offer.status === 'accepted' ? 'rgba(83, 194, 139, 0.2)' : (offer.status === 'rejected' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(99, 102, 241, 0.2)'), color: offer.status === 'accepted' ? '#6ee7b7' : (offer.status === 'rejected' ? '#fca5a5' : '#a5b4fc') }}>
                     {getTranslatedStatus(offer.status)}
                   </span>
                   {offer.post && (
@@ -328,6 +356,9 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
                       </button>
                     </>
                   )}
+                  <button onClick={() => handleDeleteOffer(offer.id, offer.postId)} title="Delete / Cancel" style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0 }}>
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               </div>
               
