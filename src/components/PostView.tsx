@@ -142,11 +142,15 @@ export default function PostView() {
           </div>
         )}
 
-        {auth.currentUser?.uid !== post.creatorId && post.status !== 'resolved' && (
-          <div style={{ marginTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem' }}>
-            {post.status === 'active' || post.status === 'tender' ? (
+        {post.status !== 'resolved' && (
+          <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', marginTop: '1.5rem' }}>
+            {post.creatorId === auth.currentUser?.uid ? (
+              <div style={{ textAlign: 'center', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.2)', color: 'var(--text-secondary)' }}>
+                <span style={{ fontSize: '0.9rem' }}>{t('yourPost', 'זהו פוסט שאתה פרסמת')}</span>
+              </div>
+            ) : post.status === 'active' || post.status === 'tender' ? (
               post.status === 'tender' ? (
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                   <input 
                     type="number" 
                     placeholder={t('enterYourBid', 'הכנס הצעת מחיר (₪)')}

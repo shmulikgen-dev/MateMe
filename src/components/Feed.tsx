@@ -215,7 +215,11 @@ export default function Feed({ embedded = false }: FeedProps) {
             </div>
           )}
 
-          {post.status === 'tender' ? (
+          {post.creatorId === auth.currentUser?.uid ? (
+            <div style={{ textAlign: 'center', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.2)', color: 'var(--text-secondary)' }}>
+              <span style={{ fontSize: '0.9rem' }}>{t('yourPost', 'זהו פוסט שאתה פרסמת')}</span>
+            </div>
+          ) : post.status === 'tender' ? (
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <input 
                 type="number" 
