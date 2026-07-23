@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
-import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, serverTimestamp, query, where } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, serverTimestamp, query, where, arrayUnion } from 'firebase/firestore';
 import { Shield, Trash2, ArrowLeft, MessageSquareWarning } from 'lucide-react';
 import { useAuth } from '../useAuth';
 import type { UserProfile } from '../useAuth';
@@ -167,11 +167,10 @@ export default function AdminPanel() {
       });
       
       // 3. Add community to user's profile
-      // Wait, we need to import arrayUnion if we want to do that, or just let them join later.
-      // But it's better if we just alert. We don't have arrayUnion imported here. 
-      // I'll skip arrayUnion on user profile for simplicity, they can join via link or we can add it.
-      // Let's add arrayUnion to imports.
-      
+      await updateDoc(doc(db, 'users', request.requesterId), {
+        myCommunities: arrayUnion(docRef.id)
+      });
+
       fetchData();
       alert('Community approved and created successfully!');
     } catch (e) {
