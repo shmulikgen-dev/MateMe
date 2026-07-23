@@ -53,8 +53,11 @@ export default function NotificationBell() {
     if (!notif.read) {
       await updateDoc(doc(db, 'notifications', notif.id), { read: true });
     }
-    // Navigate to feed where they can see the post
-    navigate('/feed');
+    if (notif.postId) {
+      navigate(`/post/${notif.postId}`);
+    } else {
+      navigate('/feed');
+    }
   };
 
   return (
