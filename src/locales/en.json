@@ -108,5 +108,10 @@
   "completedTransactions": "Completed Transactions",
   "postedBy": "Posted by:",
   "noReviewsYet": "No reviews yet.",
-  "markCompletedWithReview": "Complete & Review"
+  "markCompletedWithReview": "Complete & Review",
+  "myActiveChats": "My Active Chats",
+  "unknownUser": "Unknown User",
+  "transactionCompleted": "Transaction Completed",
+  "activeConversation": "Active Conversation",
+  "openChat": "Open"
 }

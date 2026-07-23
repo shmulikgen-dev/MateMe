@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { MessageCircle } from 'lucide-react';
-// Removed useTranslation
+import { useTranslation } from 'react-i18next';
 
 export default function Inbox() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [activeChats, setActiveChats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -20,7 +21,7 @@ export default function Inbox() {
         const chatsData = await Promise.all(snapshot.docs.map(async (chatDoc) => {
           const data = chatDoc.data();
           const partnerId = data.users.find((id: string) => id !== auth.currentUser?.uid);
-          let partnerAlias = 'Unknown User';
+          let partnerAlias = t('unknownUser', 'Unknown User');
           
           if (partnerId) {
             const userSnap = await getDocs(query(collection(db, 'users'), where('uid', '==', partnerId)));
@@ -48,7 +49,7 @@ export default function Inbox() {
   return (
     <div style={{ marginTop: '2rem', textAlign: 'left' }}>
       <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-        <MessageCircle size={20} /> My Active Chats
+        <MessageCircle size={20} /> {t('myActiveChats', 'My Active Chats')}
       </h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
         {activeChats.map(chat => (
@@ -61,10 +62,10 @@ export default function Inbox() {
             <div>
               <div style={{ fontWeight: 'bold' }}>{chat.partnerAlias}</div>
               <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>
-                {chat.status === 'completed' ? 'Transaction Completed' : 'Active Conversation'}
+                {chat.status === 'completed' ? t('transactionCompleted', 'Transaction Completed') : t('activeConversation', 'Active Conversation')}
               </div>
             </div>
-            <button className="btn" style={{ padding: '5px 10px', fontSize: '0.8rem' }}>Open</button>
+            <button className="btn" style={{ padding: '5px 10px', fontSize: '0.8rem' }}>{t('openChat', 'Open')}</button>
           </div>
         ))}
       </div>

@@ -105,5 +105,10 @@
   "completedTransactions": "עסקאות שהושלמו",
   "postedBy": "פורסם ע\"י:",
   "noReviewsYet": "עדיין אין ביקורות.",
-  "markCompletedWithReview": "השלם ושלח ביקורת"
+  "markCompletedWithReview": "השלם ושלח ביקורת",
+  "myActiveChats": "הצ'אטים הפעילים שלי",
+  "unknownUser": "משתמש לא ידוע",
+  "transactionCompleted": "עסקה הושלמה",
+  "activeConversation": "שיחה פעילה",
+  "openChat": "פתח"
 }
