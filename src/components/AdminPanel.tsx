@@ -34,29 +34,33 @@ export default function AdminPanel() {
 
   const fetchData = async () => {
     setLoading(true);
-    // Fetch Users
-    const usersSnap = await getDocs(collection(db, 'users'));
-    setUsers(usersSnap.docs.map(d => ({ id: d.id, ...d.data() } as any)));
-    
-    // Fetch Posts
-    const postsSnap = await getDocs(collection(db, 'posts'));
-    setPosts(postsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-    
-    // Fetch Open Reports
-    const q = query(collection(db, 'reports'), where('status', '==', 'open'));
-    const reportsSnap = await getDocs(q);
-    setReports(reportsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-    
-    // Fetch Communities
-    const commSnap = await getDocs(collection(db, 'communities'));
-    setCommunities(commSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-    
-    // Fetch Community Requests
-    const reqQ = query(collection(db, 'community_requests'), where('status', '==', 'pending'));
-    const reqSnap = await getDocs(reqQ);
-    setCommunityRequests(reqSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-    
-    setLoading(false);
+    try {
+      // Fetch Users
+      const usersSnap = await getDocs(collection(db, 'users'));
+      setUsers(usersSnap.docs.map(d => ({ id: d.id, ...d.data() } as any)));
+      
+      // Fetch Posts
+      const postsSnap = await getDocs(collection(db, 'posts'));
+      setPosts(postsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+      
+      // Fetch Open Reports
+      const q = query(collection(db, 'reports'), where('status', '==', 'open'));
+      const reportsSnap = await getDocs(q);
+      setReports(reportsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+      
+      // Fetch Communities
+      const commSnap = await getDocs(collection(db, 'communities'));
+      setCommunities(commSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+      
+      // Fetch Community Requests
+      const reqQ = query(collection(db, 'community_requests'), where('status', '==', 'pending'));
+      const reqSnap = await getDocs(reqQ);
+      setCommunityRequests(reqSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (error) {
+      console.error("Error fetching admin data: ", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleResolveReport = async () => {
