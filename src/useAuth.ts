@@ -18,6 +18,7 @@ export interface UserProfile {
   trustScore: number;
   subscribedCategories?: string[];
   myCommunities?: string[];
+  ignoredCommunities?: string[];
 }
 
 export function useAuth() {
@@ -71,7 +72,8 @@ export function useAuth() {
       role: 'user', // Default role
       trustScore: 0, // Starting trust score
       subscribedCategories: profileData.subscribedCategories || [],
-      myCommunities: profileData.myCommunities || []
+      myCommunities: profileData.myCommunities || [],
+      ignoredCommunities: profileData.ignoredCommunities || []
     };
     await setDoc(doc(db, 'users', user.uid), newProfile);
     setProfile(newProfile);
