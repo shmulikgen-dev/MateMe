@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, serverTimestamp, query, where, arrayUnion } from 'firebase/firestore';
-import { Shield, Trash2, ArrowLeft, MessageSquareWarning, XCircle } from 'lucide-react';
+import { Shield, Trash2, ArrowLeft, MessageSquareWarning } from 'lucide-react';
 import { useAuth } from '../useAuth';
 import type { UserProfile } from '../useAuth';
 
