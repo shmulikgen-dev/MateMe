@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
-import { collection, query, where, getDocs, getDoc, doc } from 'firebase/firestore';
-import { MessageCircle } from 'lucide-react';
+import { collection, query, where, getDocs, getDoc, doc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { MessageCircle, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function Inbox() {
@@ -45,7 +45,16 @@ export default function Inbox() {
           return { id: chatDoc.id, partnerAlias, chatTopic, ...data };
         }));
         
-        setActiveChats(chatsData);
+        // Sort newest first
+        chatsData.sort((a, b) => {
+          const timeA = a.lastMessageTime?.toMillis() || a.createdAt?.toMillis() || 0;
+          const timeB = b.lastMessageTime?.toMillis() || b.createdAt?.toMillis() || 0;
+          return timeB - timeA;
+        });
+        
+        // Filter out chats the user deleted
+        const filteredChats = chatsData.filter(c => !c.deletedFor?.includes(auth.currentUser?.uid));
+        setActiveChats(filteredChats);
       } catch (error) {
         console.error("Error fetching chats", error);
       }
@@ -54,6 +63,20 @@ export default function Inbox() {
 
     fetchChats();
   }, []);
+
+  const handleDeleteChat = async (e: React.MouseEvent, chatId: string) => {
+    e.stopPropagation();
+    if (window.confirm(t('confirmDeleteChat', 'האם אתה בטוח שברצונך למחוק שיחה זו מהרשימה?'))) {
+      try {
+        await updateDoc(doc(db, 'chats', chatId), {
+          deletedFor: arrayUnion(auth.currentUser?.uid)
+        });
+        setActiveChats(prev => prev.filter(c => c.id !== chatId));
+      } catch(err) {
+        console.error("Error deleting chat", err);
+      }
+    }
+  };
 
   if (loading) return null;
 
@@ -96,7 +119,12 @@ export default function Inbox() {
                 <span>{formatMessageTime(chat.lastMessageTime || chat.createdAt)}</span>
               </div>
             </div>
-            <button className="btn" style={{ padding: '5px 10px', fontSize: '0.8rem' }}>{t('openChat', 'Open')}</button>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button className="btn" style={{ padding: '5px 10px', fontSize: '0.8rem' }}>{t('openChat', 'Open')}</button>
+              <button onClick={(e) => handleDeleteChat(e, chat.id)} style={{ background: 'rgba(255,0,0,0.2)', border: 'none', color: '#ff4444', borderRadius: '8px', padding: '5px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <Trash2 size={16} />
+              </button>
+            </div>
           </div>
         ))}
       </div>
