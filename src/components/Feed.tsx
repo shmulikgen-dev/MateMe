@@ -204,7 +204,7 @@ export default function Feed({ embedded = false, communityId, isManager = false 
               <button onClick={() => setReportModal({isOpen: true, postId: post.id})} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0 }}>
                 <Flag size={16} />
               </button>
-              {isManager && (
+              {(isManager || post.creatorId === auth.currentUser?.uid) && (
                 <button onClick={() => handleDeletePost(post.id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0 }}>
                   <Trash2 size={16} />
                 </button>
@@ -223,6 +223,11 @@ export default function Feed({ embedded = false, communityId, isManager = false 
             <span style={{ marginLeft: '0.5rem', fontSize: '0.8rem', opacity: 0.9 }}>
               (⭐ {post.creatorTrustScore || 0})
             </span>
+            {post.createdAt && (
+              <div style={{ fontSize: '0.75rem', opacity: 0.6, marginTop: '2px' }}>
+                פורסם ב: {new Date(post.createdAt?.toMillis?.() || post.createdAt).toLocaleString('he-IL', { dateStyle: 'short', timeStyle: 'short' })}
+              </div>
+            )}
           </div>
 
           {post.category && (

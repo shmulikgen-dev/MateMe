@@ -77,7 +77,9 @@ export function useFeed(radiusKm: number = 150, communityId?: string) {
       matchingDocs.sort((a, b) => {
         if (a.isPopup && !b.isPopup) return -1;
         if (!a.isPopup && b.isPopup) return 1;
-        return a.distance - b.distance;
+        const dateA = a.createdAt?.toMillis?.() || a.createdAt || 0;
+        const dateB = b.createdAt?.toMillis?.() || b.createdAt || 0;
+        return dateB - dateA;
       });
       setPosts(matchingDocs);
     } catch (err) {

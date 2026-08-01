@@ -78,6 +78,11 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
     );
     const snapshot = await getDocs(q);
     const postsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    postsData.sort((a: any, b: any) => {
+      const dateA = a.createdAt?.toMillis?.() || a.createdAt || 0;
+      const dateB = b.createdAt?.toMillis?.() || b.createdAt || 0;
+      return dateB - dateA;
+    });
     setMyPosts(postsData);
     setLoading(false);
   };
@@ -106,7 +111,13 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
     
     // Sort offers: pending and accepted first, rejected last
     const statusOrder: Record<string, number> = { 'accepted': 1, 'pending': 2, 'rejected': 3 };
-    offersData.sort((a: any, b: any) => (statusOrder[a.status] || 9) - (statusOrder[b.status] || 9));
+    offersData.sort((a: any, b: any) => {
+      const statusDiff = (statusOrder[a.status] || 9) - (statusOrder[b.status] || 9);
+      if (statusDiff !== 0) return statusDiff;
+      const dateA = a.createdAt?.toMillis?.() || a.createdAt || 0;
+      const dateB = b.createdAt?.toMillis?.() || b.createdAt || 0;
+      return dateB - dateA;
+    });
 
     setMyOffers(offersData);
     setLoading(false);
@@ -262,9 +273,16 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
           {myPosts.map(post => (
             <div key={post.id} className="glass animate-fade-in" style={{ padding: '1.5rem', marginBottom: '1rem', borderLeft: `4px solid ${post.type === 'demand' ? 'var(--primary-color)' : 'var(--secondary-color)'}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', alignItems: 'center' }}>
-                <span style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.8rem', color: post.type === 'demand' ? 'var(--primary-color)' : 'var(--secondary-color)' }}>
-                  {t(post.type)}
-                </span>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <span style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.8rem', color: post.type === 'demand' ? 'var(--primary-color)' : 'var(--secondary-color)' }}>
+                    {t(post.type)}
+                  </span>
+                  {post.createdAt && (
+                    <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>
+                      {new Date(post.createdAt?.toMillis?.() || post.createdAt).toLocaleString('he-IL', { dateStyle: 'short', timeStyle: 'short' })}
+                    </span>
+                  )}
+                </div>
                 <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
                   <span style={{ fontSize: '0.8rem', padding: '4px 10px', borderRadius: '12px', background: post.status === 'active' ? 'rgba(83, 194, 139, 0.2)' : (post.status === 'evaluating' ? 'rgba(255, 165, 0, 0.2)' : (post.status === 'tender' ? 'rgba(236, 72, 153, 0.2)' : 'rgba(99, 102, 241, 0.2)')) }}>
                     {t(`status${post.status.charAt(0).toUpperCase() + post.status.slice(1)}`)}
@@ -339,9 +357,16 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
           {myOffers.map(offer => (
             <div key={offer.id} className="glass animate-fade-in" style={{ padding: '1.5rem', marginBottom: '1rem', borderLeft: `4px solid ${offer.status === 'rejected' ? 'var(--accent-color)' : 'var(--primary-color)'}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', alignItems: 'center' }}>
-                <span style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.8rem', color: offer.status === 'rejected' ? 'var(--accent-color)' : 'var(--primary-color)' }}>
-                  {offer.bidAmount ? `${t('yourBid')} ₪${offer.bidAmount}` : t('myOffers')}
-                </span>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <span style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.8rem', color: offer.status === 'rejected' ? 'var(--accent-color)' : 'var(--primary-color)' }}>
+                    {offer.bidAmount ? `${t('yourBid')} ₪${offer.bidAmount}` : t('myOffers')}
+                  </span>
+                  {offer.createdAt && (
+                    <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>
+                      {new Date(offer.createdAt?.toMillis?.() || offer.createdAt).toLocaleString('he-IL', { dateStyle: 'short', timeStyle: 'short' })}
+                    </span>
+                  )}
+                </div>
                 <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
                   <span style={{ fontSize: '0.8rem', padding: '4px 10px', borderRadius: '12px', background: offer.status === 'accepted' ? 'rgba(83, 194, 139, 0.2)' : (offer.status === 'rejected' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(99, 102, 241, 0.2)'), color: offer.status === 'accepted' ? '#6ee7b7' : (offer.status === 'rejected' ? '#fca5a5' : '#a5b4fc') }}>
                     {getTranslatedStatus(offer.status)}
