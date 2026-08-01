@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
-import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, updateDoc, doc, arrayUnion } from 'firebase/firestore';
 import { useAuth } from '../useAuth';
 import { Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +11,7 @@ export default function MyCommunities() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [communities, setCommunities] = useState<any[]>([]);
+  const [suggestedCommunities, setSuggestedCommunities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [requestData, setRequestData] = useState({ name: '', description: '', type: 'geographic' });
@@ -23,19 +24,26 @@ export default function MyCommunities() {
     }
 
     const fetchCommunities = async () => {
-      if (!profile.myCommunities || profile.myCommunities.length === 0) {
-        setCommunities([]);
-        setLoading(false);
-        return;
-      }
-
       try {
-        const q = query(
-          collection(db, 'communities'),
-          where('__name__', 'in', profile.myCommunities)
-        );
-        const snapshot = await getDocs(q);
-        setCommunities(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        // Fetch My Communities
+        if (profile.myCommunities && profile.myCommunities.length > 0) {
+          const q = query(
+            collection(db, 'communities'),
+            where('__name__', 'in', profile.myCommunities)
+          );
+          const snapshot = await getDocs(q);
+          setCommunities(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        } else {
+          setCommunities([]);
+        }
+        
+        // Fetch Suggested Communities
+        const allQ = query(collection(db, 'communities'));
+        const allSnap = await getDocs(allQ);
+        const allComms = allSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const suggested = allComms.filter(c => !profile.myCommunities?.includes(c.id));
+        setSuggestedCommunities(suggested);
+        
       } catch (e) {
         console.error("Error fetching communities", e);
       }
@@ -67,6 +75,24 @@ export default function MyCommunities() {
     }
     setSubmitting(false);
   };
+  const handleJoinCommunity = async (communityId: string) => {
+    try {
+      // Add to user
+      await updateDoc(doc(db, 'users', user!.uid), {
+        myCommunities: arrayUnion(communityId)
+      });
+      // Add to community
+      await updateDoc(doc(db, 'communities', communityId), {
+        memberIds: arrayUnion(user!.uid)
+      });
+      alert('הצטרפת לקהילה בהצלחה!');
+      window.location.reload();
+    } catch(e) {
+      console.error(e);
+      alert('שגיאה בהצטרפות לקהילה');
+    }
+  };
+
 
   if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>{t('loading', 'Loading...')}</div>;
 
@@ -118,6 +144,28 @@ export default function MyCommunities() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {suggestedCommunities.length > 0 && (
+        <div style={{ marginTop: '3rem' }}>
+          <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>קהילות מומלצות עבורך</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+            {suggestedCommunities.map(c => (
+              <div key={c.id} className="glass" style={{ padding: '1rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--secondary-color)' }}>{c.name}</h4>
+                  <p style={{ margin: 0, opacity: 0.8, fontSize: '0.9rem' }}>{c.description}</p>
+                  <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', opacity: 0.6 }}>
+                    {c.type === 'geographic' ? 'קהילה גאוגרפית' : 'קהילה נושאית'} • {c.memberIds?.length || 0} חברים
+                  </div>
+                </div>
+                <button className="btn" onClick={() => handleJoinCommunity(c.id)} style={{ background: 'var(--primary-color)', fontSize: '0.9rem', padding: '0.5rem 1rem' }}>
+                  הצטרף
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
