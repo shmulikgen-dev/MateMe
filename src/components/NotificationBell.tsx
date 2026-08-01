@@ -11,6 +11,7 @@ interface Notification {
   type: string;
   message: string;
   postId?: string;
+  communityId?: string;
   read: boolean;
   createdAt: any;
 }
@@ -55,6 +56,12 @@ export default function NotificationBell() {
     }
     if (notif.postId) {
       navigate(`/post/${notif.postId}`);
+    } else if (notif.communityId) {
+      if (notif.type === 'community_invite') {
+        navigate(`/join/${notif.communityId}`);
+      } else {
+        navigate(`/community/${notif.communityId}`);
+      }
     } else {
       navigate('/feed');
     }

@@ -88,6 +88,10 @@ function Home() {
       {user ? (
         <div className="animate-fade-in" style={{ marginTop: '2rem' }}>
           <div className="glass" style={{ padding: '1rem', marginBottom: '2rem' }}>
+            <MyCommunities />
+          </div>
+
+          <div className="glass" style={{ padding: '1rem', marginBottom: '2rem' }}>
             <MyPosts embedded={true} />
           </div>
           
@@ -95,9 +99,6 @@ function Home() {
             <Feed embedded={true} />
           </div>
 
-          <div className="glass" style={{ padding: '1rem', marginTop: '2rem' }}>
-            <MyCommunities />
-          </div>
 
           <div className="glass" style={{ padding: '2rem', marginTop: '2rem' }}>
             {profile?.role === 'admin' && (
