@@ -164,7 +164,7 @@ export default function AdminPanel() {
       const q = query(chatsRef, where('participants', 'array-contains', profile.uid));
       const querySnapshot = await getDocs(q);
       
-      let existingChatId = null;
+      let existingChatId: string | null = null;
       querySnapshot.forEach((doc) => {
         const data = doc.data();
         if (data.participants.includes(userId)) {
@@ -172,8 +172,8 @@ export default function AdminPanel() {
         }
       });
       
-      let chatIdToUse = existingChatId;
-      if (!chatIdToUse) {
+      let chatIdToUse: string;
+      if (!existingChatId) {
         const newChatRef = await addDoc(chatsRef, {
           participants: [profile.uid, userId],
           users: [profile.uid, userId],
@@ -185,6 +185,7 @@ export default function AdminPanel() {
         });
         chatIdToUse = newChatRef.id;
       } else {
+        chatIdToUse = existingChatId;
         await updateDoc(doc(db, 'chats', chatIdToUse), {
           lastMessage: text,
           lastMessageTime: serverTimestamp(),
