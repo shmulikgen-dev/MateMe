@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { db } from './firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { geohashQueryBounds, distanceBetween } from 'geofire-common';
+import { useAuth } from './useAuth';
 
 export interface Location {
   lat: number;
@@ -9,6 +10,7 @@ export interface Location {
 }
 
 export function useFeed(radiusKm: number = 150, communityId?: string) {
+  const { profile } = useAuth();
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [location, setLocation] = useState<Location | null>(null);
@@ -58,6 +60,8 @@ export function useFeed(radiusKm: number = 150, communityId?: string) {
           const data = doc.data();
           
           if (data.expiresAt && data.expiresAt < now) continue;
+          
+          if (profile?.ignoredPosts?.includes(doc.id)) continue;
           
           if (communityId) {
             // We are looking for posts in a specific community

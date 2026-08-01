@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
-import { collection, doc, addDoc, serverTimestamp, updateDoc, deleteDoc } from 'firebase/firestore';
-import { MapPin, ArrowLeft, SearchX, Share2, Flag, Hourglass, Paperclip, Trash2 } from 'lucide-react';
+import { collection, doc, addDoc, serverTimestamp, updateDoc, deleteDoc, arrayUnion } from 'firebase/firestore';
+import { MapPin, ArrowLeft, SearchX, Share2, Flag, Hourglass, Paperclip, Trash2, XCircle } from 'lucide-react';
 import { useFeed } from '../useFeed';
 
 interface FeedProps {
@@ -123,6 +123,21 @@ export default function Feed({ embedded = false, communityId, isManager = false 
     } catch (error) {
       console.error("Error connecting: ", error);
       alert(t('failedConnect'));
+    }
+  };
+
+  const handleIgnorePost = async (postId: string) => {
+    if (!auth.currentUser) return;
+    try {
+      await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+        ignoredPosts: arrayUnion(postId)
+      });
+      setPosts(posts.filter(p => p.id !== postId));
+      setToastMsg('ההודעה הוסרה מהפיד שלך');
+      setTimeout(() => setToastMsg(''), 3000);
+    } catch (err) {
+      console.error("Error ignoring post: ", err);
+      alert('אירעה שגיאה בהסרת ההודעה');
     }
   };
 
@@ -280,16 +295,25 @@ export default function Feed({ embedded = false, communityId, isManager = false 
               </button>
             </div>
           ) : (
-            <button 
-              className="btn" 
-              onClick={() => handleConnect(post.id, post.responseCount || 0, false, post.type)}
-              style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', boxShadow: 'none' }}
-            >
-              {post.type === 'supply' 
-                ? t('interestedToArrive', 'מעניין, מתכנן להגיע') 
-                : t('connectCount', { count: post.responseCount || 0 })
-              }
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button 
+                className="btn" 
+                onClick={() => handleConnect(post.id, post.responseCount || 0, false, post.type)}
+                style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', boxShadow: 'none' }}
+              >
+                {post.type === 'supply' 
+                  ? t('interestedToArrive', 'מעניין, מתכנן להגיע') 
+                  : t('connectCount', { count: post.responseCount || 0 })
+                }
+              </button>
+              <button 
+                onClick={() => handleIgnorePost(post.id)}
+                style={{ flex: 0.3, minWidth: '40px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                title="לא מעוניין"
+              >
+                <XCircle size={20} />
+              </button>
+            </div>
           )}
         </div>
       ))}
