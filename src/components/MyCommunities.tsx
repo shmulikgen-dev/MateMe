@@ -41,7 +41,10 @@ export default function MyCommunities() {
         const allQ = query(collection(db, 'communities'));
         const allSnap = await getDocs(allQ);
         const allComms = allSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        const suggested = allComms.filter(c => !profile.myCommunities?.includes(c.id));
+        const suggested = allComms.filter(c => 
+          !profile.myCommunities?.includes(c.id) && 
+          !profile.ignoredCommunities?.includes(c.id)
+        );
         setSuggestedCommunities(suggested);
         
       } catch (e) {
@@ -90,6 +93,17 @@ export default function MyCommunities() {
     } catch(e) {
       console.error(e);
       alert('שגיאה בהצטרפות לקהילה');
+    }
+  };
+
+  const handleIgnoreCommunity = async (communityId: string) => {
+    try {
+      await updateDoc(doc(db, 'users', user!.uid), {
+        ignoredCommunities: arrayUnion(communityId)
+      });
+      setSuggestedCommunities(prev => prev.filter(c => c.id !== communityId));
+    } catch(e) {
+      console.error("Error ignoring community", e);
     }
   };
 
@@ -160,9 +174,14 @@ export default function MyCommunities() {
                     {c.type === 'geographic' ? 'קהילה גאוגרפית' : 'קהילה נושאית'} • {c.memberIds?.length || 0} חברים
                   </div>
                 </div>
-                <button className="btn" onClick={() => handleJoinCommunity(c.id)} style={{ background: 'var(--primary-color)', fontSize: '0.9rem', padding: '0.5rem 1rem' }}>
-                  הצטרף
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <button className="btn" onClick={() => handleJoinCommunity(c.id)} style={{ background: 'var(--primary-color)', fontSize: '0.9rem', padding: '0.5rem 1rem' }}>
+                    הצטרף
+                  </button>
+                  <button className="btn" onClick={() => handleIgnoreCommunity(c.id)} style={{ background: 'transparent', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)', fontSize: '0.9rem', padding: '0.5rem 1rem' }}>
+                    לא מעוניין
+                  </button>
+                </div>
               </div>
             ))}
           </div>
