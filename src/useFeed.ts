@@ -46,9 +46,6 @@ export function useFeed(radiusKm: number = 150, communityId?: string) {
           where('location.geohash', '<=', b[1]),
           where('status', 'in', ['active', 'tender'])
         );
-        if (communityId) {
-          q = query(q, where('communityId', '==', communityId));
-        }
         promises.push(getDocs(q));
       }
 
@@ -62,8 +59,13 @@ export function useFeed(radiusKm: number = 150, communityId?: string) {
           
           if (data.expiresAt && data.expiresAt < now) continue;
           
-          // Filter out community posts if we are in the global feed
-          if (!communityId && data.communityId && data.communityId !== 'global') continue;
+          if (communityId) {
+            // We are looking for posts in a specific community
+            if (data.communityId !== communityId) continue;
+          } else {
+            // Filter out community posts if we are in the global feed
+            if (data.communityId && data.communityId !== 'global') continue;
+          }
 
           const lat = data.location.lat;
           const lng = data.location.lng;
