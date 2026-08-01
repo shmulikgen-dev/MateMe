@@ -107,7 +107,12 @@ export default function Inbox() {
             style={{ padding: '1rem', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: chat.status === 'completed' ? '4px solid gray' : '4px solid var(--primary-color)' }}
           >
             <div>
-              <div style={{ fontWeight: 'bold' }}>{chat.partnerAlias}</div>
+              <div style={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {chat.partnerAlias}
+                {chat.unreadCount?.[auth.currentUser?.uid || ''] > 0 && (
+                  <span style={{ background: '#ef4444', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '10px' }}>{t('new', 'חדש')}</span>
+                )}
+              </div>
               {chat.chatTopic && (
                 <div style={{ fontSize: '0.85rem', opacity: 0.9, marginBottom: '2px' }}>
                   <strong>{t('topic', 'נושא')}:</strong> {chat.chatTopic}

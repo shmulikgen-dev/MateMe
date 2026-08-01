@@ -59,6 +59,14 @@ export default function Chat() {
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     });
 
+    // Clear unread count for current user
+    const clearUnread = async () => {
+      await updateDoc(doc(db, 'chats', chatId), {
+        [`unreadCount.${auth.currentUser?.uid}`]: 0
+      });
+    };
+    clearUnread();
+
     return () => unsubscribe();
   }, [chatId]);
 
@@ -73,10 +81,22 @@ export default function Chat() {
     });
     
     // Update the parent chat document
-    await updateDoc(doc(db, 'chats', chatId), {
+    const updateData: any = {
       lastMessage: newMessage,
       lastMessageTime: serverTimestamp()
-    });
+    };
+    
+    const chatDocRef = doc(db, 'chats', chatId);
+    const chatDocSnapshot = await getDoc(chatDocRef);
+    if (chatDocSnapshot.exists()) {
+      const users = chatDocSnapshot.data()?.users || chatDocSnapshot.data()?.participants || [];
+      const partnerId = users.find((id: string) => id !== auth.currentUser?.uid);
+      if (partnerId) {
+        updateData[`unreadCount.${partnerId}`] = increment(1);
+      }
+    }
+    
+    await updateDoc(chatDocRef, updateData);
     
     setNewMessage('');
   };
