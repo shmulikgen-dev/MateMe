@@ -20,6 +20,7 @@ export default function Feed({ embedded = false, communityId, isManager = false 
   const [bids, setBids] = useState<{[key: string]: string}>({});
   const [reportModal, setReportModal] = useState<{isOpen: boolean, postId: string}>({isOpen: false, postId: ''});
   const [reportReason, setReportReason] = useState('');
+  const [toastMsg, setToastMsg] = useState('');
 
   const handleShare = async (postId: string) => {
     const url = `${window.location.origin}/post/${postId}`;
@@ -35,7 +36,8 @@ export default function Feed({ embedded = false, communityId, isManager = false 
       }
     } else {
       navigator.clipboard.writeText(url);
-      alert(t('linkCopied', 'הקישור הועתק ללוח'));
+      setToastMsg(t('linkCopied', 'הקישור הועתק ללוח'));
+      setTimeout(() => setToastMsg(''), 3000);
     }
   };
 
@@ -50,7 +52,8 @@ export default function Feed({ embedded = false, communityId, isManager = false 
         status: 'open',
         createdAt: serverTimestamp()
       });
-      alert(t('reportSubmitted', 'הדיווח נשלח בהצלחה'));
+      setToastMsg(t('reportSubmitted', 'הדיווח נשלח בהצלחה'));
+      setTimeout(() => setToastMsg(''), 3000);
       setReportModal({isOpen: false, postId: ''});
       setReportReason('');
     } catch (error) {
@@ -64,7 +67,8 @@ export default function Feed({ embedded = false, communityId, isManager = false 
     try {
       await deleteDoc(doc(db, 'posts', postId));
       setPosts(posts.filter(p => p.id !== postId));
-      alert(t('postDeleted', 'הפוסט נמחק בהצלחה'));
+      setToastMsg(t('postDeleted', 'הפוסט נמחק בהצלחה'));
+      setTimeout(() => setToastMsg(''), 3000);
     } catch (error) {
       console.error('Error deleting post:', error);
       alert(t('errorOccurred', 'אירעה שגיאה'));
@@ -110,7 +114,12 @@ export default function Feed({ embedded = false, communityId, isManager = false 
         return p;
       }).filter(p => p.status === 'active' || p.status === 'tender'));
       
-      alert(isTender ? t('bidSubmitted') : t('connectionSent'));
+      if (isTender) {
+        alert(t('bidSubmitted'));
+      } else {
+        setToastMsg(t('connectionSent', 'הודעתך נשלחה'));
+        setTimeout(() => setToastMsg(''), 3000);
+      }
     } catch (error) {
       console.error("Error connecting: ", error);
       alert(t('failedConnect'));
@@ -123,6 +132,16 @@ export default function Feed({ embedded = false, communityId, isManager = false 
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: embedded ? '0' : '1rem' }}>
+      {toastMsg && (
+        <div style={{
+          position: 'fixed', bottom: '20px', left: '50%', transform: 'translateX(-50%)',
+          background: 'var(--primary-color)', color: '#fff', padding: '10px 20px',
+          borderRadius: '8px', zIndex: 1000, boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+        }}>
+          {toastMsg}
+        </div>
+      )}
+
       {!embedded && (
         <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginBottom: '1rem' }}>
           <ArrowLeft size={20} /> {t('backToHome')}
