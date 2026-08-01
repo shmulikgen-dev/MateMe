@@ -17,6 +17,7 @@ export default function CommunityView() {
   const [loading, setLoading] = useState(true);
   const [isManager, setIsManager] = useState(false);
   const [members, setMembers] = useState<any[]>([]);
+  const [showMembersModal, setShowMembersModal] = useState(false);
 
   useEffect(() => {
     const fetchCommunity = async () => {
@@ -29,14 +30,14 @@ export default function CommunityView() {
           
           if (user && data.managerIds?.includes(user.uid)) {
             setIsManager(true);
+          }
             
-            // Fetch member details for managers
-            if (data.memberIds?.length > 0) {
-              const membersSnap = await getDocs(
-                query(collection(db, 'users'), where('uid', 'in', data.memberIds))
-              );
-              setMembers(membersSnap.docs.map(d => ({ uid: d.id, ...d.data() })));
-            }
+          // Fetch member details
+          if (data.memberIds?.length > 0) {
+            const membersSnap = await getDocs(
+              query(collection(db, 'users'), where('uid', 'in', data.memberIds))
+            );
+            setMembers(membersSnap.docs.map(d => ({ uid: d.id, ...d.data() })));
           }
         }
       } catch (e) {
@@ -96,7 +97,7 @@ export default function CommunityView() {
             <h1 style={{ margin: '0 0 0.5rem 0', color: 'var(--primary-color)' }}>{community.name}</h1>
             <p style={{ margin: 0, opacity: 0.8 }}>{community.description}</p>
             <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', opacity: 0.7, display: 'flex', gap: '1rem' }}>
-              <span><Users size={14} style={{verticalAlign: 'middle', marginRight: '4px'}}/> {community.memberIds?.length || 0} חברים</span>
+              <span onClick={() => setShowMembersModal(true)} style={{ cursor: 'pointer', textDecoration: 'underline' }}><Users size={14} style={{verticalAlign: 'middle', marginRight: '4px'}}/> {community.memberIds?.length || 0} חברים</span>
               <span>סוג: {community.type === 'geographic' ? 'גאוגרפי' : 'נושאי'}</span>
             </div>
           </div>
@@ -138,12 +139,28 @@ export default function CommunityView() {
                     )}
                   </div>
                 ))}
-                {members.length === 0 && <p style={{opacity: 0.6}}>אין חברים להצגה.</p>}
               </div>
             </div>
           )}
 
-          <h3 style={{ marginBottom: '1rem' }}>פיד הקהילה</h3>
+          {showMembersModal && (
+            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '1rem' }}>
+              <div className="glass animate-fade-in" style={{ padding: '2rem', borderRadius: '12px', width: '100%', maxWidth: '400px', maxHeight: '80vh', overflowY: 'auto', position: 'relative' }}>
+                <button onClick={() => setShowMembersModal(false)} style={{ position: 'absolute', top: '10px', left: '10px', background: 'transparent', border: 'none', color: 'var(--text-color)', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
+                <h3 style={{ margin: '0 0 1rem 0' }}>חברי הקהילה ({members.length})</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {members.map(m => (
+                    <div key={m.uid} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.05)', padding: '0.8rem', borderRadius: '8px' }}>
+                      <span style={{ fontWeight: 'bold' }}>{m.alias || 'Anonymous'}</span>
+                      <span style={{ opacity: 0.7, fontSize: '0.8rem' }}>⭐ {m.trustScore || 0}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <h2 style={{ marginBottom: '1rem' }}>לוח מודעות קהילתי</h2>
           {/* Note: In a real app, a community manager might need a special prop passed to Feed to enable "Delete Post" buttons.
               For simplicity, we pass manager mode to Feed if they are manager. */}
           <Feed communityId={id} isManager={isManager} />
