@@ -1,27 +1,13 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { db } from '../firebase';
-import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, serverTimestamp, query, where, arrayUnion } from 'firebase/firestore';
-import { Shield, Trash2, ArrowLeft, MessageSquareWarning, XCircle } from 'lucide-react';
-import { useAuth } from '../useAuth';
-import type { UserProfile } from '../useAuth';
+const fs = require('fs');
+const path = 'C:/Users/shmul/Documents/עתיד החיבורים הקהילתיים/client/src/components/AdminPanel.tsx';
+let content = fs.readFileSync(path, 'utf8');
 
-export default function AdminPanel() {
-  const { profile, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
-  const [users, setUsers] = useState<UserProfile[]>([]);
-  const [posts, setPosts] = useState<any[]>([]);
-  const [reports, setReports] = useState<any[]>([]);
-  const [communities, setCommunities] = useState<any[]>([]);
-  const [communityRequests, setCommunityRequests] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [replyText, setReplyText] = useState('');
-  const [selectedReport, setSelectedReport] = useState<any>(null);
-  const [newCommunityName, setNewCommunityName] = useState('');
-  const [newCommunityDesc, setNewCommunityDesc] = useState('');
-  const [newCommunityType, setNewCommunityType] = useState<'geographic' | 'thematic'>('geographic');
-  const [managerUserId, setManagerUserId] = useState('');
-  const [activeTab, setActiveTab] = useState<'general' | 'communities'>('general');
+content = content.replace(
+  "import { Shield, Trash2, ArrowLeft, MessageSquareWarning } from 'lucide-react';",
+  "import { Shield, Trash2, ArrowLeft, MessageSquareWarning, XCircle } from 'lucide-react';"
+);
+
+const stateInsert = `  const [activeTab, setActiveTab] = useState<'general' | 'communities'>('general');
   const [rejectModal, setRejectModal] = useState<{isOpen: boolean, request: any}>({isOpen: false, request: null});
   const [rejectReason, setRejectReason] = useState('הקהילה כבר קיימת במערכת');
   const REJECT_REASONS = [
@@ -29,135 +15,14 @@ export default function AdminPanel() {
     'נושא הקהילה לא מתאים לאופי האפליקציה',
     'חסר מידע בתיאור הקהילה',
     'אחר'
-  ];
+  ];`;
 
-  useEffect(() => {
-    if (authLoading) return;
-    if (profile?.role !== 'admin') {
-      alert("Unauthorized Access");
-      navigate('/');
-      return;
-    }
-    fetchData();
-  }, [profile, authLoading, navigate]);
+content = content.replace(
+  "  const [managerUserId, setManagerUserId] = useState('');",
+  "  const [managerUserId, setManagerUserId] = useState('');\n" + stateInsert
+);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      // Fetch Users
-      const usersSnap = await getDocs(collection(db, 'users'));
-      setUsers(usersSnap.docs.map(d => ({ id: d.id, ...d.data() } as any)));
-      
-      // Fetch Posts
-      const postsSnap = await getDocs(collection(db, 'posts'));
-      setPosts(postsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-      
-      // Fetch Open Reports
-      const q = query(collection(db, 'reports'), where('status', '==', 'open'));
-      const reportsSnap = await getDocs(q);
-      setReports(reportsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-      
-      // Fetch Communities
-      const commSnap = await getDocs(collection(db, 'communities'));
-      setCommunities(commSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-      
-      // Fetch Community Requests
-      const reqQ = query(collection(db, 'community_requests'), where('status', '==', 'pending'));
-      const reqSnap = await getDocs(reqQ);
-      setCommunityRequests(reqSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-    } catch (error) {
-      console.error("Error fetching admin data: ", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResolveReport = async () => {
-    if (!selectedReport || !replyText.trim()) return;
-    
-    try {
-      // 1. Update report status
-      await updateDoc(doc(db, 'reports', selectedReport.id), {
-        status: 'resolved',
-        adminResponse: replyText,
-        resolvedAt: serverTimestamp()
-      });
-      
-      // 2. Create notification for the reporter
-      if (selectedReport.reporterId && selectedReport.reporterId !== 'anonymous') {
-        await addDoc(collection(db, 'notifications'), {
-          userId: selectedReport.reporterId,
-          type: 'system',
-          message: `Admin replied to your report: ${replyText}`,
-          read: false,
-          createdAt: serverTimestamp()
-        });
-      }
-      
-      setSelectedReport(null);
-      setReplyText('');
-      fetchData();
-      alert('Report resolved and user notified.');
-    } catch (e) {
-      console.error(e);
-      alert('Error resolving report');
-    }
-  };
-
-  const handleDeleteUser = async (uid: string) => {
-    if (window.confirm("Delete this user?")) {
-      await deleteDoc(doc(db, 'users', uid));
-      fetchData();
-    }
-  };
-
-  const handleDeletePost = async (postId: string) => {
-    if (window.confirm("Delete this post?")) {
-      await deleteDoc(doc(db, 'posts', postId));
-      fetchData();
-    }
-  };
-
-  const handleCreateCommunity = async () => {
-    if (!newCommunityName) return;
-    try {
-      await addDoc(collection(db, 'communities'), {
-        name: newCommunityName,
-        description: newCommunityDesc,
-        type: newCommunityType,
-        managerIds: [],
-        memberIds: [],
-        createdAt: Date.now()
-      });
-      setNewCommunityName('');
-      setNewCommunityDesc('');
-      fetchData();
-      alert('Community created!');
-    } catch (e) {
-      console.error(e);
-      alert('Error creating community');
-    }
-  };
-
-  const handleAssignManager = async (communityId: string) => {
-    if (!managerUserId) return;
-    try {
-      const comm = communities.find(c => c.id === communityId);
-      if (!comm) return;
-      const updatedManagers = [...(comm.managerIds || []), managerUserId];
-      await updateDoc(doc(db, 'communities', communityId), {
-        managerIds: Array.from(new Set(updatedManagers))
-      });
-      setManagerUserId('');
-      fetchData();
-      alert('Manager assigned!');
-    } catch (e) {
-      console.error(e);
-      alert('Error assigning manager');
-    }
-  };
-
-  const handleRejectCommunityRequest = async () => {
+const rejectHandler = `  const handleRejectCommunityRequest = async () => {
     if (!rejectModal.request) return;
     try {
       await updateDoc(doc(db, 'community_requests', rejectModal.request.id), {
@@ -171,77 +36,15 @@ export default function AdminPanel() {
       console.error(e);
       alert('Error rejecting request');
     }
-  };
+  };`;
 
-  const handleApproveCommunityRequest = async (request: any) => {
-    try {
-      // 1. Create Community
-      const docRef = await addDoc(collection(db, 'communities'), {
-        name: request.name,
-        description: request.description,
-        type: request.type,
-        managerIds: [request.requesterId], // User who requested becomes manager
-        memberIds: [request.requesterId],
-        createdAt: Date.now()
-      });
-      
-      // 2. Update request status
-      await updateDoc(doc(db, 'community_requests', request.id), {
-        status: 'approved',
-        communityId: docRef.id
-      });
-      
-      // 3. Add community to user's profile
-      await updateDoc(doc(db, 'users', request.requesterId), {
-        myCommunities: arrayUnion(docRef.id)
-      });
+content = content.replace(
+  "  const handleApproveCommunityRequest",
+  rejectHandler + "\n\n  const handleApproveCommunityRequest"
+);
 
-      fetchData();
-      alert('Community approved and created successfully!');
-    } catch (e) {
-      console.error("Error approving request", e);
-      alert("Error approving request");
-    }
-  };
-
-  const handleOpenChatWithRequester = async (requesterId: string, communityName: string) => {
-    if (!profile?.uid) return;
-    try {
-      // Check if chat exists
-      const chatsRef = collection(db, 'chats');
-      const q = query(chatsRef, where('participants', 'array-contains', profile.uid));
-      const querySnapshot = await getDocs(q);
-      
-      let existingChatId = null;
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        if (data.participants.includes(requesterId)) {
-          existingChatId = doc.id;
-        }
-      });
-      
-      if (existingChatId) {
-        navigate(`/chat/${existingChatId}`);
-      } else {
-        const newChatRef = await addDoc(chatsRef, {
-          participants: [profile.uid, requesterId],
-          users: [profile.uid, requesterId],
-          topic: `בקשת קהילה: ${communityName}`,
-          createdAt: serverTimestamp(),
-          lastMessage: '',
-          lastMessageTime: serverTimestamp()
-        });
-        navigate(`/chat/${newChatRef.id}`);
-      }
-    } catch (e) {
-      console.error("Error opening chat", e);
-      alert("Error opening chat");
-    }
-  };
-
-  if (loading || authLoading) return <div style={{padding: '2rem', textAlign: 'center'}}>Loading Admin Panel...</div>;
-
-  return (
+// We need to rewrite the return statement. We will use a regex to replace everything from `return (` to the end of the file.
+const newReturn = `  return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
       <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginBottom: '2rem' }}>
         <ArrowLeft size={20} /> Back to App
@@ -464,4 +267,7 @@ export default function AdminPanel() {
       )}
     </div>
   );
-}
+}`;
+
+content = content.replace(/  return \([\s\S]+$/, newReturn);
+fs.writeFileSync(path, content, 'utf8');
