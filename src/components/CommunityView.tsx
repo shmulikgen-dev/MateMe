@@ -4,7 +4,7 @@ import { db } from '../firebase';
 import { doc, getDoc, updateDoc, arrayRemove, collection, getDocs, query, where } from 'firebase/firestore';
 import { useAuth } from '../useAuth';
 import Feed from './Feed';
-import { Share2, Users, ArrowLeft, PlusCircle, UserMinus } from 'lucide-react';
+import { Share2, Users, ArrowLeft, PlusCircle, UserMinus, LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function CommunityView() {
@@ -85,6 +85,26 @@ export default function CommunityView() {
     }
   };
 
+  const handleLeaveCommunity = async () => {
+    if (!user || !id) return;
+    if (!window.confirm('האם אתה בטוח שברצונך לעזוב את הקהילה?')) return;
+    
+    try {
+      await updateDoc(doc(db, 'communities', id), {
+        memberIds: arrayRemove(user.uid)
+      });
+      await updateDoc(doc(db, 'users', user.uid), {
+        myCommunities: arrayRemove(id)
+      });
+      alert('עזבת את הקהילה בהצלחה');
+      navigate('/');
+      window.location.reload(); // Reload to refresh profile context
+    } catch (e) {
+      console.error("Error leaving community", e);
+      alert('אירעה שגיאה. נסה שוב מאוחר יותר.');
+    }
+  };
+
   if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>{t('loading', 'Loading...')}</div>;
   if (!community) return <div style={{ padding: '2rem', textAlign: 'center' }}>קהילה לא נמצאה</div>;
 
@@ -106,9 +126,20 @@ export default function CommunityView() {
               <span>סוג: {community.type === 'geographic' ? 'גאוגרפי' : 'נושאי'}</span>
             </div>
           </div>
-          <button className="btn" onClick={handleShare} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <Share2 size={18} /> הזמן חברים
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end' }}>
+            <button className="btn" onClick={handleShare} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <Share2 size={18} /> הזמן חברים
+            </button>
+            {isMember && (
+              <button 
+                onClick={handleLeaveCommunity} 
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', opacity: 0.7, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem', padding: '0.2rem' }}
+                title="עזוב קהילה"
+              >
+                <LogOut size={14} /> עזוב קהילה
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
