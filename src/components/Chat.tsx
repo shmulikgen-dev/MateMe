@@ -71,6 +71,13 @@ export default function Chat() {
       senderId: auth.currentUser.uid,
       createdAt: serverTimestamp()
     });
+    
+    // Update the parent chat document
+    await updateDoc(doc(db, 'chats', chatId), {
+      lastMessage: newMessage,
+      lastMessageTime: serverTimestamp()
+    });
+    
     setNewMessage('');
   };
 

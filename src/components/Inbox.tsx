@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, getDoc, doc } from 'firebase/firestore';
 import { MessageCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -20,7 +20,8 @@ export default function Inbox() {
         
         const chatsData = await Promise.all(snapshot.docs.map(async (chatDoc) => {
           const data = chatDoc.data();
-          const partnerId = data.users.find((id: string) => id !== auth.currentUser?.uid);
+          const usersList = data.users || data.participants || [];
+          const partnerId = usersList.find((id: string) => id !== auth.currentUser?.uid);
           let partnerAlias = t('unknownUser', 'Unknown User');
           
           if (partnerId) {
@@ -29,7 +30,19 @@ export default function Inbox() {
               partnerAlias = userSnap.docs[0].data().alias;
             }
           }
-          return { id: chatDoc.id, partnerAlias, ...data };
+          
+          let chatTopic = data.topic || '';
+          if (!chatTopic && data.postId) {
+            try {
+              const postDoc = await getDoc(doc(db, 'posts', data.postId));
+              if (postDoc.exists()) {
+                const pData = postDoc.data();
+                chatTopic = pData.description || pData.category || '';
+              }
+            } catch(e) {}
+          }
+          
+          return { id: chatDoc.id, partnerAlias, chatTopic, ...data };
         }));
         
         setActiveChats(chatsData);
@@ -46,6 +59,17 @@ export default function Inbox() {
 
   if (activeChats.length === 0) return null; // Don't show anything if no chats
 
+  const formatMessageTime = (timestamp: any) => {
+    if (!timestamp) return '';
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const now = new Date();
+    const isToday = date.getDate() === now.getDate() && 
+                    date.getMonth() === now.getMonth() && 
+                    date.getFullYear() === now.getFullYear();
+    const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return isToday ? timeStr : `${date.toLocaleDateString()} ${timeStr}`;
+  };
+
   return (
     <div style={{ marginTop: '2rem', textAlign: 'left' }}>
       <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
@@ -61,8 +85,15 @@ export default function Inbox() {
           >
             <div>
               <div style={{ fontWeight: 'bold' }}>{chat.partnerAlias}</div>
-              <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>
-                {chat.status === 'completed' ? t('transactionCompleted', 'Transaction Completed') : t('activeConversation', 'Active Conversation')}
+              {chat.chatTopic && (
+                <div style={{ fontSize: '0.85rem', opacity: 0.9, marginBottom: '2px' }}>
+                  <strong>{t('topic', 'נושא')}:</strong> {chat.chatTopic}
+                </div>
+              )}
+              <div style={{ fontSize: '0.8rem', opacity: 0.7, display: 'flex', gap: '0.5rem' }}>
+                <span>{chat.status === 'completed' ? t('transactionCompleted', 'Transaction Completed') : t('activeConversation', 'Active Conversation')}</span>
+                <span>•</span>
+                <span>{formatMessageTime(chat.lastMessageTime || chat.createdAt)}</span>
               </div>
             </div>
             <button className="btn" style={{ padding: '5px 10px', fontSize: '0.8rem' }}>{t('openChat', 'Open')}</button>
