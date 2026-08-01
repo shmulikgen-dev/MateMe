@@ -50,14 +50,15 @@ export default function CommunityView() {
 
   const handleShare = () => {
     const url = `${window.location.origin}/join/${id}`;
+    const text = `היי! הוזמנת להצטרף ל-${community.name} באפליקציית החיבורים הקהילתיים.\nלחץ על הקישור להצטרפות:\n${url}`;
     if (navigator.share) {
       navigator.share({
         title: `הצטרף לקהילה: ${community.name}`,
-        url: url,
+        text: text,
       }).catch(console.error);
     } else {
-      navigator.clipboard.writeText(url);
-      alert('קישור ההזמנה הועתק ללוח!');
+      navigator.clipboard.writeText(text);
+      alert('הודעת ההזמנה והקישור הועתקו ללוח!');
     }
   };
 
