@@ -42,7 +42,7 @@ export default function Inbox() {
             } catch(e) {}
           }
           
-          return { id: chatDoc.id, partnerAlias, chatTopic, ...data };
+          return { id: chatDoc.id, partnerAlias, chatTopic, ...data } as any;
         }));
         
         // Sort newest first
