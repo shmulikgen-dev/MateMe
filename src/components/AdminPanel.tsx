@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
-import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, serverTimestamp, query, where, arrayUnion } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, serverTimestamp, query, where, arrayUnion, increment } from 'firebase/firestore';
 import { Shield, Trash2, ArrowLeft, MessageSquareWarning } from 'lucide-react';
 import { useAuth } from '../useAuth';
 import type { UserProfile } from '../useAuth';
@@ -157,16 +157,70 @@ export default function AdminPanel() {
     }
   };
 
+  const sendAdminMessage = async (userId: string, communityName: string, text: string) => {
+    if (!profile?.uid) return;
+    try {
+      const chatsRef = collection(db, 'chats');
+      const q = query(chatsRef, where('participants', 'array-contains', profile.uid));
+      const querySnapshot = await getDocs(q);
+      
+      let existingChatId = null;
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.participants.includes(userId)) {
+          existingChatId = doc.id;
+        }
+      });
+      
+      let chatIdToUse = existingChatId;
+      if (!chatIdToUse) {
+        const newChatRef = await addDoc(chatsRef, {
+          participants: [profile.uid, userId],
+          users: [profile.uid, userId],
+          topic: `בקשת קהילה: ${communityName}`,
+          createdAt: serverTimestamp(),
+          lastMessage: text,
+          lastMessageTime: serverTimestamp(),
+          [`unreadCount.${userId}`]: 1
+        });
+        chatIdToUse = newChatRef.id;
+      } else {
+        await updateDoc(doc(db, 'chats', chatIdToUse), {
+          lastMessage: text,
+          lastMessageTime: serverTimestamp(),
+          [`unreadCount.${userId}`]: increment(1)
+        });
+      }
+
+      await addDoc(collection(db, 'chats', chatIdToUse, 'messages'), {
+        text: text,
+        senderId: profile.uid,
+        createdAt: serverTimestamp()
+      });
+    } catch (e) {
+      console.error("Error sending admin message", e);
+    }
+  };
+
   const handleRejectCommunityRequest = async () => {
-    if (!rejectModal.request) return;
+    if (!rejectModal.request || !rejectReason) {
+      alert("אנא בחר סיבת דחייה");
+      return;
+    }
     try {
       await updateDoc(doc(db, 'community_requests', rejectModal.request.id), {
         status: 'rejected',
         rejectReason: rejectReason
       });
+      
+      const rejectMsg = `בקשתך לפתיחת הקהילה "${rejectModal.request.name}" נדחתה.
+סיבת הדחייה: ${rejectReason}`;
+      await sendAdminMessage(rejectModal.request.requesterId, rejectModal.request.name, rejectMsg);
+
       fetchData();
       setRejectModal({isOpen: false, request: null});
-      alert('Community request rejected.');
+      setRejectReason('');
+      alert('Community request rejected and user notified.');
     } catch (e) {
       console.error(e);
       alert('Error rejecting request');
@@ -196,8 +250,15 @@ export default function AdminPanel() {
         myCommunities: arrayUnion(docRef.id)
       });
 
+      // 4. Send admin message with link
+      const link = `${window.location.origin}/join/${docRef.id}`;
+      const approvalMsg = `בקשתך לפתיחת הקהילה "${request.name}" אושרה בהצלחה! 
+מצורף קישור ההצטרפות לקהילה: ${link}
+אנו ממליצים לך לשלוח את הקישור לחברי הקהילה כדי שיוכלו להצטרף.`;
+      await sendAdminMessage(request.requesterId, request.name, approvalMsg);
+
       fetchData();
-      alert('Community approved and created successfully!');
+      alert('Community approved, created, and user notified successfully!');
     } catch (e) {
       console.error("Error approving request", e);
       alert("Error approving request");
