@@ -240,10 +240,38 @@ export default function AdminPanel() {
         </div>
       </div>
 
+      {/* --- ACTION ITEMS (Top Priority for Admin) --- */}
       <div style={{ display: 'flex', gap: '2rem', marginTop: '2rem', flexWrap: 'wrap' }}>
-        
+        {/* COMMUNITY REQUESTS */}
+        <div className="glass" style={{ flex: 1, minWidth: '300px', padding: '1rem', borderRadius: '12px' }}>
+          <h3>Community Requests ({communityRequests.length})</h3>
+          
+          {communityRequests.length === 0 && <p style={{ opacity: 0.7 }}>No pending community requests.</p>}
+          
+          <div style={{ maxHeight: '400px', overflowY: 'auto', marginBottom: '2rem' }}>
+            {communityRequests.map(r => (
+              <div key={r.id} style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', marginBottom: '1rem', borderRadius: '8px', borderLeft: '4px solid var(--secondary-color)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <strong>{r.name} ({r.type})</strong>
+                  <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>Requester: {r.requesterAlias}</span>
+                </div>
+                <p style={{ margin: '0.5rem 0', fontSize: '0.9rem', fontStyle: 'italic' }}>"{r.description}"</p>
+                
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                  <button className="btn" onClick={() => handleApproveCommunityRequest(r)} style={{ background: '#10b981', flex: 1, padding: '0.5rem' }}>
+                    Approve & Create
+                  </button>
+                  <button className="btn" onClick={() => handleOpenChatWithRequester(r.requesterId)} style={{ background: 'var(--primary-color)', flex: 1, padding: '0.5rem' }}>
+                    Open Chat
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* OPEN REPORTS TABLE */}
-        <div className="glass" style={{ width: '100%', padding: '1rem', borderRadius: '12px', marginBottom: '2rem' }}>
+        <div className="glass" style={{ flex: 1, minWidth: '300px', padding: '1rem', borderRadius: '12px' }}>
           <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><MessageSquareWarning color="#ef4444" /> Open Reports ({reports.length})</h3>
           
           {reports.length === 0 && <p style={{ opacity: 0.7 }}>No open reports at this time. Great job!</p>}
@@ -283,7 +311,11 @@ export default function AdminPanel() {
             ))}
           </div>
         </div>
-        
+      </div>
+
+      <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', margin: '3rem 0' }} />
+
+      <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
         {/* USERS TABLE */}
         <div className="glass" style={{ flex: 1, minWidth: '300px', padding: '1rem', borderRadius: '12px' }}>
           <h3>Users ({users.length})</h3>
@@ -320,66 +352,40 @@ export default function AdminPanel() {
             ))}
           </div>
         </div>
+      </div>
 
-        {/* COMMUNITIES MANAGEMENT */}
-        <div className="glass" style={{ width: '100%', padding: '1rem', borderRadius: '12px', marginTop: '2rem' }}>
-          <h3>Community Requests ({communityRequests.length})</h3>
-          
-          {communityRequests.length === 0 && <p style={{ opacity: 0.7 }}>No pending community requests.</p>}
-          
-          <div style={{ maxHeight: '400px', overflowY: 'auto', marginBottom: '2rem' }}>
-            {communityRequests.map(r => (
-              <div key={r.id} style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', marginBottom: '1rem', borderRadius: '8px', borderLeft: '4px solid var(--secondary-color)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <strong>{r.name} ({r.type})</strong>
-                  <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>Requester: {r.requesterAlias}</span>
-                </div>
-                <p style={{ margin: '0.5rem 0', fontSize: '0.9rem', fontStyle: 'italic' }}>"{r.description}"</p>
-                
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-                  <button className="btn" onClick={() => handleApproveCommunityRequest(r)} style={{ background: '#10b981', flex: 1, padding: '0.5rem' }}>
-                    Approve & Create
-                  </button>
-                  <button className="btn" onClick={() => handleOpenChatWithRequester(r.requesterId)} style={{ background: 'var(--primary-color)', flex: 1, padding: '0.5rem' }}>
-                    Open Chat
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <h3>Communities Management</h3>
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px' }}>
-              <h4>Create New Community</h4>
-              <input type="text" placeholder="Community Name" value={newCommunityName} onChange={e => setNewCommunityName(e.target.value)} style={{ width: '100%', padding: '0.8rem', marginBottom: '0.5rem', boxSizing: 'border-box' }} />
-              <input type="text" placeholder="Description" value={newCommunityDesc} onChange={e => setNewCommunityDesc(e.target.value)} style={{ width: '100%', padding: '0.8rem', marginBottom: '0.5rem', boxSizing: 'border-box' }} />
-              <select value={newCommunityType} onChange={e => setNewCommunityType(e.target.value as any)} style={{ width: '100%', padding: '0.8rem', marginBottom: '1rem', boxSizing: 'border-box', background: 'rgba(0,0,0,0.3)', color: 'white' }}>
-                <option value="geographic">Geographic</option>
-                <option value="thematic">Thematic</option>
-              </select>
-              <button className="btn" onClick={handleCreateCommunity} style={{ width: '100%', background: 'var(--primary-color)' }}>Create Community</button>
-            </div>
-          </div>
-          
-          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-            {communities.map(c => (
-              <div key={c.id} style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', marginBottom: '1rem', borderRadius: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <strong>{c.name} ({c.type})</strong>
-                  <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>Members: {c.memberIds?.length || 0}</span>
-                </div>
-                <p style={{ margin: '0.5rem 0', fontSize: '0.9rem', opacity: 0.8 }}>{c.description}</p>
-                <div style={{ fontSize: '0.8rem', marginBottom: '0.5rem' }}>Managers: {c.managerIds?.join(', ') || 'None'}</div>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <input type="text" placeholder="User ID to assign as manager" value={managerUserId} onChange={e => setManagerUserId(e.target.value)} style={{ padding: '0.5rem', flex: 1 }} />
-                  <button className="btn" onClick={() => handleAssignManager(c.id)} style={{ padding: '0.5rem 1rem' }}>Assign</button>
-                </div>
-              </div>
-            ))}
+      {/* COMMUNITIES MANAGEMENT */}
+      <div className="glass" style={{ width: '100%', padding: '1rem', borderRadius: '12px', marginTop: '2rem' }}>
+        <h3>Communities Management</h3>
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px' }}>
+            <h4>Create New Community</h4>
+            <input type="text" placeholder="Community Name" value={newCommunityName} onChange={e => setNewCommunityName(e.target.value)} style={{ width: '100%', padding: '0.8rem', marginBottom: '0.5rem', boxSizing: 'border-box' }} />
+            <input type="text" placeholder="Description" value={newCommunityDesc} onChange={e => setNewCommunityDesc(e.target.value)} style={{ width: '100%', padding: '0.8rem', marginBottom: '0.5rem', boxSizing: 'border-box' }} />
+            <select value={newCommunityType} onChange={e => setNewCommunityType(e.target.value as any)} style={{ width: '100%', padding: '0.8rem', marginBottom: '1rem', boxSizing: 'border-box', background: 'rgba(0,0,0,0.3)', color: 'white' }}>
+              <option value="geographic">Geographic</option>
+              <option value="thematic">Thematic</option>
+            </select>
+            <button className="btn" onClick={handleCreateCommunity} style={{ width: '100%', background: 'var(--primary-color)' }}>Create Community</button>
           </div>
         </div>
-
+        
+        <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+          {communities.map(c => (
+            <div key={c.id} style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', marginBottom: '1rem', borderRadius: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <strong>{c.name} ({c.type})</strong>
+                <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>Members: {c.memberIds?.length || 0}</span>
+              </div>
+              <p style={{ margin: '0.5rem 0', fontSize: '0.9rem', opacity: 0.8 }}>{c.description}</p>
+              <div style={{ fontSize: '0.8rem', marginBottom: '0.5rem' }}>Managers: {c.managerIds?.join(', ') || 'None'}</div>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <input type="text" placeholder="User ID to assign as manager" value={managerUserId} onChange={e => setManagerUserId(e.target.value)} style={{ padding: '0.5rem', flex: 1 }} />
+                <button className="btn" onClick={() => handleAssignManager(c.id)} style={{ padding: '0.5rem 1rem' }}>Assign</button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
