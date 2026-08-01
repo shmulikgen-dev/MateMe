@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
-import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, arrayUnion, setDoc } from 'firebase/firestore';
 import { useAuth } from '../useAuth';
 
 export default function JoinCommunity() {
@@ -42,16 +42,16 @@ export default function JoinCommunity() {
       await updateDoc(doc(db, 'communities', community.id), {
         memberIds: arrayUnion(user.uid)
       });
-      // Add community to user profile
-      await updateDoc(doc(db, 'users', user.uid), {
+      // Add community to user profile using setDoc with merge to prevent missing doc errors
+      await setDoc(doc(db, 'users', user.uid), {
         myCommunities: arrayUnion(community.id)
-      });
+      }, { merge: true });
       
       alert("הצטרפת לקהילה בהצלחה!");
       navigate(`/community/${community.id}`);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert("שגיאה בהצטרפות לקהילה");
+      alert(`שגיאה בהצטרפות לקהילה: ${e.message || 'שגיאה לא ידועה'}`);
       setJoining(false);
     }
   };
