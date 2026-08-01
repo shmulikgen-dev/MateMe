@@ -12,6 +12,7 @@ export default function Chat() {
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [partnerAlias, setPartnerAlias] = useState('Loading...');
+  const [chatTopic, setChatTopic] = useState<string>('');
   const [isCompleted, setIsCompleted] = useState(false);
   const [showReviewInput, setShowReviewInput] = useState(false);
   const [reviewText, setReviewText] = useState('');
@@ -26,12 +27,25 @@ export default function Chat() {
       if (chatDoc.exists()) {
         const data = chatDoc.data();
         if (data.status === 'completed') setIsCompleted(true);
+        
+        if (data.topic) {
+          setChatTopic(data.topic);
+        } else if (data.postId) {
+          const postDoc = await getDoc(doc(db, 'posts', data.postId));
+          if (postDoc.exists()) {
+            const pData = postDoc.data();
+            setChatTopic(pData.description || pData.category || '');
+          }
+        }
 
-        const partnerId = data.users.find((id: string) => id !== auth.currentUser?.uid);
+        const usersList = data.users || data.participants || [];
+        const partnerId = usersList.find((id: string) => id !== auth.currentUser?.uid);
         if (partnerId) {
           const userSnap = await getDocs(query(collection(db, 'users'), where('uid', '==', partnerId)));
           if (!userSnap.empty) {
             setPartnerAlias(userSnap.docs[0].data().alias);
+          } else {
+            setPartnerAlias('Unknown User');
           }
         }
       }
@@ -99,15 +113,33 @@ export default function Chat() {
     }
   };
 
+  const formatMessageTime = (timestamp: any) => {
+    if (!timestamp) return '';
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const now = new Date();
+    const isToday = date.getDate() === now.getDate() && 
+                    date.getMonth() === now.getMonth() && 
+                    date.getFullYear() === now.getFullYear();
+    const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return isToday ? timeStr : `${date.toLocaleDateString()} ${timeStr}`;
+  };
+
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', height: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
-      <div className="glass" style={{ padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '0 0 16px 16px', zIndex: 10 }}>
-        <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-          <ArrowLeft size={20} /> Back
-        </button>
-        <h3 style={{ margin: 0 }}>Chat with {partnerAlias}</h3>
-        <div style={{width: 60}}></div> {/* spacer */}
+      <div className="glass" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', borderRadius: '0 0 16px 16px', zIndex: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <button onClick={() => navigate(-1)} style={{ background: 'transparent', border: 'none', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+            <ArrowLeft size={20} /> Back
+          </button>
+          <h3 style={{ margin: 0 }}>Chat with {partnerAlias}</h3>
+          <div style={{width: 60}}></div> {/* spacer */}
+        </div>
+        {chatTopic && (
+          <div style={{ textAlign: 'center', fontSize: '0.85rem', opacity: 0.8, background: 'rgba(0,0,0,0.1)', padding: '4px 8px', borderRadius: '8px', alignSelf: 'center' }}>
+            <strong>נושא:</strong> {chatTopic}
+          </div>
+        )}
       </div>
 
       {/* Messages */}
@@ -122,7 +154,10 @@ export default function Chat() {
                 </button>
               )}
               <div style={{ background: isMe ? 'var(--primary-color)' : 'rgba(255,255,255,0.1)', padding: '0.8rem 1rem', borderRadius: isMe ? '16px 16px 16px 4px' : '16px 16px 4px 16px', color: 'white' }}>
-                {msg.text}
+                <div>{msg.text}</div>
+                <div style={{ fontSize: '0.7rem', opacity: 0.7, textAlign: isMe ? 'right' : 'left', marginTop: '4px' }}>
+                  {formatMessageTime(msg.createdAt)}
+                </div>
               </div>
             </div>
           );

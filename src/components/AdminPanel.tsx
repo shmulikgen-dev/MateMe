@@ -179,7 +179,7 @@ export default function AdminPanel() {
     }
   };
 
-  const handleOpenChatWithRequester = async (requesterId: string) => {
+  const handleOpenChatWithRequester = async (requesterId: string, communityName: string) => {
     if (!profile?.uid) return;
     try {
       // Check if chat exists
@@ -200,6 +200,8 @@ export default function AdminPanel() {
       } else {
         const newChatRef = await addDoc(chatsRef, {
           participants: [profile.uid, requesterId],
+          users: [profile.uid, requesterId],
+          topic: `בקשת קהילה: ${communityName}`,
           createdAt: serverTimestamp(),
           lastMessage: '',
           lastMessageTime: serverTimestamp()
@@ -261,7 +263,7 @@ export default function AdminPanel() {
                   <button className="btn" onClick={() => handleApproveCommunityRequest(r)} style={{ background: '#10b981', flex: 1, padding: '0.5rem' }}>
                     Approve & Create
                   </button>
-                  <button className="btn" onClick={() => handleOpenChatWithRequester(r.requesterId)} style={{ background: 'var(--primary-color)', flex: 1, padding: '0.5rem' }}>
+                  <button className="btn" onClick={() => handleOpenChatWithRequester(r.requesterId, r.name)} style={{ background: 'var(--primary-color)', flex: 1, padding: '0.5rem' }}>
                     Open Chat
                   </button>
                 </div>
