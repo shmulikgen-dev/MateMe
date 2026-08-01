@@ -126,14 +126,14 @@ export default function CommunityView() {
               <span>סוג: {community.type === 'geographic' ? 'גאוגרפי' : 'נושאי'}</span>
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', alignItems: 'flex-end' }}>
             <button className="btn" onClick={handleShare} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
               <Share2 size={18} /> הזמן חברים
             </button>
             {isMember && (
               <button 
                 onClick={handleLeaveCommunity} 
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', opacity: 0.7, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem', padding: '0.2rem' }}
+                style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', padding: '0.4rem 0.8rem', borderRadius: '8px', transition: 'all 0.2s' }}
                 title="עזוב קהילה"
               >
                 <LogOut size={14} /> עזוב קהילה
