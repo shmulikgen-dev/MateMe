@@ -32,12 +32,17 @@ export default function CommunityView() {
             setIsManager(true);
           }
             
-          // Fetch member details
+          // Fetch member details safely in chunks of 10
           if (data.memberIds?.length > 0) {
-            const membersSnap = await getDocs(
-              query(collection(db, 'users'), where('uid', 'in', data.memberIds))
-            );
-            setMembers(membersSnap.docs.map(d => ({ uid: d.id, ...d.data() })));
+            const allMembers: any[] = [];
+            for (let i = 0; i < data.memberIds.length; i += 10) {
+              const chunk = data.memberIds.slice(i, i + 10);
+              const membersSnap = await getDocs(
+                query(collection(db, 'users'), where('uid', 'in', chunk))
+              );
+              allMembers.push(...membersSnap.docs.map(d => ({ uid: d.id, ...d.data() })));
+            }
+            setMembers(allMembers);
           }
         }
       } catch (e) {
