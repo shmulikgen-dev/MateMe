@@ -54,6 +54,25 @@ export default function PostView() {
       
       await updateDoc(postRef, updates);
       
+      if (post.type === 'supply' && post.supplyType === 'item') {
+        // Create Chat immediately
+        const chatRef = await addDoc(collection(db, 'chats'), {
+          postId: post.id,
+          communityId: post.communityId || null,
+          users: [auth.currentUser.uid, post.creatorId],
+          status: 'active',
+          createdAt: serverTimestamp()
+        });
+        
+        // Navigate to the chat
+        if (post.communityId) {
+          navigate(`/community/${post.communityId}/chat/${chatRef.id}`);
+        } else {
+          navigate(`/chat/${chatRef.id}`);
+        }
+        return;
+      }
+      
       await addDoc(collection(db, 'responses'), {
         postId: post.id,
         responderId: auth.currentUser.uid,

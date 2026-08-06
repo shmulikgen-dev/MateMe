@@ -76,8 +76,11 @@ export default function Feed({ embedded = false, communityId, isManager = false 
     }
   };
 
-  const handleConnect = async (postId: string, currentResponses: number, isTender: boolean, postType?: string) => {
+  const handleConnect = async (post: any, isTender: boolean) => {
     try {
+      const postId = post.id;
+      const currentResponses = post.responseCount || 0;
+      const postType = post.type;
       if (!auth.currentUser) return;
       
       const bidAmount = isTender ? Number(bids[postId]) : null;
@@ -97,6 +100,25 @@ export default function Feed({ embedded = false, communityId, isManager = false 
       }
       
       await updateDoc(postRef, updates);
+      
+      if (postType === 'supply' && post.supplyType === 'item') {
+        // Create Chat immediately
+        const chatRef = await addDoc(collection(db, 'chats'), {
+          postId,
+          communityId: post.communityId || null,
+          users: [auth.currentUser.uid, post.creatorId],
+          status: 'active',
+          createdAt: serverTimestamp()
+        });
+        
+        // Navigate to the chat
+        if (post.communityId) {
+          navigate(`/community/${post.communityId}/chat/${chatRef.id}`);
+        } else {
+          navigate(`/chat/${chatRef.id}`);
+        }
+        return;
+      }
       
       // Create response document
       await addDoc(collection(db, 'responses'), {
@@ -318,7 +340,7 @@ export default function Feed({ embedded = false, communityId, isManager = false 
               />
               <button 
                 className="btn" 
-                onClick={() => handleConnect(post.id, post.responseCount || 0, true)}
+                onClick={() => handleConnect(post, true)}
                 style={{ flex: 1, background: 'var(--accent-color)' }}
               >
                 {t('submitBid')}
@@ -328,7 +350,7 @@ export default function Feed({ embedded = false, communityId, isManager = false 
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button 
                 className="btn" 
-                onClick={() => handleConnect(post.id, post.responseCount || 0, false, post.type)}
+                onClick={() => handleConnect(post, false)}
                 style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', boxShadow: 'none' }}
               >
                 {post.type === 'supply' 
