@@ -21,6 +21,7 @@ export default function Feed({ embedded = false, communityId, isManager = false 
   const [reportModal, setReportModal] = useState<{isOpen: boolean, postId: string}>({isOpen: false, postId: ''});
   const [reportReason, setReportReason] = useState('');
   const [toastMsg, setToastMsg] = useState('');
+  const [ignoringPosts, setIgnoringPosts] = useState<string[]>([]);
 
   const handleShare = async (postId: string) => {
     const url = `${window.location.origin}/post/${postId}`;
@@ -129,14 +130,22 @@ export default function Feed({ embedded = false, communityId, isManager = false 
   const handleIgnorePost = async (postId: string) => {
     if (!auth.currentUser) return;
     try {
+      // Mark as ignoring to trigger the visual transition
+      setIgnoringPosts(prev => [...prev, postId]);
+      
       await updateDoc(doc(db, 'users', auth.currentUser.uid), {
         ignoredPosts: arrayUnion(postId)
       });
-      setPosts(posts.filter(p => p.id !== postId));
-      setToastMsg('ההודעה הוסרה מהפיד שלך');
-      setTimeout(() => setToastMsg(''), 3000);
+      
+      // Wait for the transition to finish before removing from the list
+      setTimeout(() => {
+        setPosts(currentPosts => currentPosts.filter(p => p.id !== postId));
+        setIgnoringPosts(prev => prev.filter(id => id !== postId));
+      }, 1500);
+      
     } catch (err) {
       console.error("Error ignoring post: ", err);
+      setIgnoringPosts(prev => prev.filter(id => id !== postId));
       alert('אירעה שגיאה בהסרת ההודעה');
     }
   };
@@ -189,15 +198,35 @@ export default function Feed({ embedded = false, communityId, isManager = false 
         </div>
       )}
 
-      {displayedPosts.map((post, index) => (
-        <div key={post.id} className="glass animate-fade-in" style={{ 
+      {displayedPosts.map((post, index) => {
+        const isIgnoring = ignoringPosts.includes(post.id);
+        
+        return (
+        <div key={post.id} className={`glass ${isIgnoring ? '' : 'animate-fade-in'}`} style={{ 
             padding: '1.5rem', 
             marginBottom: '1.2rem', 
-            animationDelay: `${index * 0.1}s`, 
+            animationDelay: isIgnoring ? '0s' : `${index * 0.1}s`, 
             borderRight: post.isPopup ? 'none' : `4px solid ${post.type === 'demand' ? 'var(--primary-color)' : 'var(--secondary-color)'}`,
             border: post.isPopup ? '2px solid #ef4444' : '1px solid var(--glass-border)',
-            boxShadow: post.isPopup ? '0 0 15px rgba(239, 68, 68, 0.3)' : 'none'
+            boxShadow: post.isPopup ? '0 0 15px rgba(239, 68, 68, 0.3)' : 'none',
+            opacity: isIgnoring ? 0 : 1,
+            transform: isIgnoring ? 'scale(0.95)' : 'scale(1)',
+            transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+            position: 'relative',
+            overflow: 'hidden'
           }}>
+          {isIgnoring && (
+            <div style={{
+              position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+              background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              zIndex: 10, color: 'white', fontWeight: 'bold', fontSize: '1.2rem',
+              transition: 'opacity 0.3s ease'
+            }}>
+              ההודעה הוסרה מהפיד
+            </div>
+          )}
+          
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'center' }}>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
               <span style={{ fontWeight: '600', letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.75rem', padding: '4px 10px', borderRadius: '20px', background: post.type === 'demand' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(16, 185, 129, 0.15)', color: post.type === 'demand' ? '#a5b4fc' : '#6ee7b7' }}>
@@ -316,7 +345,7 @@ export default function Feed({ embedded = false, communityId, isManager = false 
             </div>
           )}
         </div>
-      ))}
+      )})}
       
       {!showAll && posts.length > 3 && (
         <button 

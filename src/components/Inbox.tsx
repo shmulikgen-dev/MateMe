@@ -66,15 +66,13 @@ export default function Inbox() {
 
   const handleDeleteChat = async (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation();
-    if (window.confirm(t('confirmDeleteChat', 'האם אתה בטוח שברצונך למחוק שיחה זו מהרשימה?'))) {
-      try {
-        await updateDoc(doc(db, 'chats', chatId), {
-          deletedFor: arrayUnion(auth.currentUser?.uid)
-        });
-        setActiveChats(prev => prev.filter(c => c.id !== chatId));
-      } catch(err) {
-        console.error("Error deleting chat", err);
-      }
+    try {
+      await updateDoc(doc(db, 'chats', chatId), {
+        deletedFor: arrayUnion(auth.currentUser?.uid)
+      });
+      setActiveChats(prev => prev.filter(c => c.id !== chatId));
+    } catch(err) {
+      console.error("Error deleting chat", err);
     }
   };
 
