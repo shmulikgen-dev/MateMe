@@ -332,7 +332,7 @@ export default function Feed({ embedded = false, communityId, isManager = false 
                 style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', boxShadow: 'none' }}
               >
                 {post.type === 'supply' 
-                  ? t('interestedToArrive', 'מעניין, מתכנן להגיע') 
+                  ? (post.supplyType === 'event' ? t('interestedToArrive', 'מעוניין, מתכנן להגיע') : t('interestedChat', 'מעוניין, פתח צ׳אט'))
                   : t('connectCount', { count: post.responseCount || 0 })
                 }
               </button>

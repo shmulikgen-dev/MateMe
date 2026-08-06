@@ -164,7 +164,7 @@ export default function PostView() {
                 </div>
               ) : (
                 <button className="btn" onClick={() => handleConnect(false)} style={{ width: '100%', background: 'var(--primary-color)' }}>
-                  {post.type === 'supply' ? t('interestedToArrive', 'מעניין, מתכנן להגיע') : t('connect', 'צור קשר')}
+                  {post.type === 'supply' ? (post.supplyType === 'event' ? t('interestedToArrive', 'מעוניין, מתכנן להגיע') : t('interestedChat', 'מעוניין, פתח צ׳אט')) : t('connect', 'צור קשר')}
                 </button>
               )
             ) : (

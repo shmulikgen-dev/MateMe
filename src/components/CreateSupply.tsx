@@ -22,6 +22,7 @@ export default function CreateSupply() {
   const [description, setDescription] = useState('');
   const [radius, setRadius] = useState(5);
   const [ttlHours, setTtlHours] = useState(24);
+  const [supplyType, setSupplyType] = useState('item');
   const [availability, setAvailability] = useState('');
   const [budget, setBudget] = useState('');
   const [loading, setLoading] = useState(false);
@@ -100,6 +101,7 @@ export default function CreateSupply() {
           creatorAlias: profile?.alias || 'Anonymous',
           creatorTrustScore: profile?.trustScore || 0,
           type,
+          supplyType,
           category,
           description,
           availability,
@@ -209,6 +211,22 @@ export default function CreateSupply() {
             <option value="catTech">{t('catTech')}</option>
             <option value="catOther">{t('catOther')}</option>
           </select>
+        </div>
+
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
+            {t('supplyType', 'סוג ההצעה')}
+          </label>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem', background: supplyType === 'item' ? 'var(--primary-glow)' : 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', border: supplyType === 'item' ? '1px solid var(--primary-color)' : '1px solid var(--glass-border)', cursor: 'pointer' }}>
+              <input type="radio" name="supplyType" value="item" checked={supplyType === 'item'} onChange={() => setSupplyType('item')} style={{ accentColor: 'var(--primary-color)' }} /> 
+              {t('typeServiceItem', 'שירות או פריט')}
+            </label>
+            <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem', background: supplyType === 'event' ? 'var(--primary-glow)' : 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', border: supplyType === 'event' ? '1px solid var(--primary-color)' : '1px solid var(--glass-border)', cursor: 'pointer' }}>
+              <input type="radio" name="supplyType" value="event" checked={supplyType === 'event'} onChange={() => setSupplyType('event')} style={{ accentColor: 'var(--primary-color)' }} /> 
+              {t('typeEvent', 'אירוע מתוכנן')}
+            </label>
+          </div>
         </div>
 
         <textarea 
