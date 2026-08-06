@@ -175,7 +175,7 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
 
   const handleAccept = async (responseId: string, responderId: string, postId: string) => {
     if (!auth.currentUser) return;
-    const post = posts.find(p => p.id === postId);
+    const post = myPosts.find((p: any) => p.id === postId);
     
     // Create Chat
     const chatRef = await addDoc(collection(db, 'chats'), {
