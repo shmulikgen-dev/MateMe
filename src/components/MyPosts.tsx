@@ -22,6 +22,7 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
   const [loading, setLoading] = useState(true);
   const [reportModal, setReportModal] = useState<{isOpen: boolean, postId: string}>({isOpen: false, postId: ''});
   const [reportReason, setReportReason] = useState('');
+  const [deletingOffers, setDeletingOffers] = useState<string[]>([]);
 
   const handleShare = async (postId: string) => {
     const url = `${window.location.origin}/post/${postId}`;
@@ -124,26 +125,31 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
   };
 
   const handleDeleteOffer = async (offerId: string, postId?: string) => {
-    if (window.confirm(t('confirmDelete', 'האם אתה בטוח שברצונך למחוק/לבטל פנייה זו?'))) {
-      try {
-        await deleteDoc(doc(db, 'responses', offerId));
-        if (postId) {
-          const postRef = doc(db, 'posts', postId);
-          const postSnap = await getDoc(postRef);
-          if (postSnap.exists()) {
-            const currentCount = postSnap.data().responseCount || 0;
-            const newCount = Math.max(0, currentCount - 1);
-            const updates: any = { responseCount: newCount };
-            if (newCount < 3 && postSnap.data().status === 'evaluating') {
-              updates.status = 'active';
-            }
-            await updateDoc(postRef, updates);
+    try {
+      setDeletingOffers(prev => [...prev, offerId]);
+      
+      await deleteDoc(doc(db, 'responses', offerId));
+      if (postId) {
+        const postRef = doc(db, 'posts', postId);
+        const postSnap = await getDoc(postRef);
+        if (postSnap.exists()) {
+          const currentCount = postSnap.data().responseCount || 0;
+          const newCount = Math.max(0, currentCount - 1);
+          const updates: any = { responseCount: newCount };
+          if (newCount < 3 && postSnap.data().status === 'evaluating') {
+            updates.status = 'active';
           }
+          await updateDoc(postRef, updates);
         }
-        fetchMyOffers();
-      } catch (e) {
-        console.error("Error deleting offer: ", e);
       }
+      
+      setTimeout(() => {
+        setMyOffers(prev => prev.filter(o => o.id !== offerId));
+        setDeletingOffers(prev => prev.filter(id => id !== offerId));
+      }, 1500);
+    } catch (e) {
+      console.error("Error deleting offer: ", e);
+      setDeletingOffers(prev => prev.filter(id => id !== offerId));
     }
   };
 
@@ -354,8 +360,32 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
               <button className="btn" onClick={() => navigate('/feed')} style={{ marginTop: '1rem', background: 'var(--primary-color)' }}>{t('viewFeed')}</button>
             </div>
           )}
-          {myOffers.map(offer => (
-            <div key={offer.id} className="glass animate-fade-in" style={{ padding: '1.5rem', marginBottom: '1rem', borderLeft: `4px solid ${offer.status === 'rejected' ? 'var(--accent-color)' : 'var(--primary-color)'}` }}>
+          {myOffers.map(offer => {
+            const isDeleting = deletingOffers.includes(offer.id);
+            
+            return (
+            <div key={offer.id} className={`glass ${isDeleting ? '' : 'animate-fade-in'}`} style={{ 
+                padding: isDeleting ? '0' : '1.5rem', 
+                marginBottom: isDeleting ? '0' : '1rem', 
+                maxHeight: isDeleting ? '0' : '300px',
+                opacity: isDeleting ? 0 : 1,
+                transform: isDeleting ? 'scale(0.95)' : 'scale(1)',
+                transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+                position: 'relative',
+                overflow: 'hidden',
+                borderLeft: isDeleting ? 'none' : `4px solid ${offer.status === 'rejected' ? 'var(--accent-color)' : 'var(--primary-color)'}` 
+              }}>
+              {isDeleting && (
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                  background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  zIndex: 10, color: 'white', fontWeight: 'bold', fontSize: '1.2rem',
+                  transition: 'opacity 0.3s ease'
+                }}>
+                  הפנייה נמחקה
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', alignItems: 'center' }}>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                   <span style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.8rem', color: offer.status === 'rejected' ? 'var(--accent-color)' : 'var(--primary-color)' }}>
@@ -401,7 +431,7 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
                 <p style={{ margin: '0.5rem 0', opacity: 0.5, fontStyle: 'italic' }}>Post deleted</p>
               )}
             </div>
-          ))}
+          )})}
         </>
       )}
 
