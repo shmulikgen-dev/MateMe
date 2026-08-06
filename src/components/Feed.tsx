@@ -16,7 +16,7 @@ export default function Feed({ embedded = false, communityId, isManager = false 
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { posts, setPosts, loading, location } = useFeed(150, communityId);
-  const [showAll, setShowAll] = useState(!embedded);
+  const [visibleCount, setVisibleCount] = useState(10);
   const [bids, setBids] = useState<{[key: string]: string}>({});
   const [reportModal, setReportModal] = useState<{isOpen: boolean, postId: string}>({isOpen: false, postId: ''});
   const [reportReason, setReportReason] = useState('');
@@ -175,7 +175,7 @@ export default function Feed({ embedded = false, communityId, isManager = false 
 
   if (!location) return <div style={{ textAlign: 'center', padding: '2rem' }}>{t('lookingForLocation')}</div>;
 
-  const displayedPosts = showAll ? posts : posts.slice(0, 3);
+  const displayedPosts = posts.slice(0, visibleCount);
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: embedded ? '0' : '1rem' }}>
@@ -371,13 +371,13 @@ export default function Feed({ embedded = false, communityId, isManager = false 
         </div>
       )})}
       
-      {!showAll && posts.length > 3 && (
+      {posts.length > visibleCount && (
         <button 
           className="btn" 
-          onClick={() => setShowAll(true)}
+          onClick={() => setVisibleCount(prev => prev + 10)}
           style={{ width: '100%', marginTop: '1rem', background: 'var(--glass-bg)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)' }}
         >
-          {t('showMorePosts', 'הצג את כל הפוסטים הרלוונטים')}
+          {t('loadMorePosts', 'טען עוד פוסטים')}
         </button>
       )}
 
