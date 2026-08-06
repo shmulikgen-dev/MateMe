@@ -4,11 +4,12 @@ import { db } from '../firebase';
 import { doc, getDoc, updateDoc, arrayRemove, collection, getDocs, query, where } from 'firebase/firestore';
 import { useAuth } from '../useAuth';
 import Feed from './Feed';
+import Chat from './Chat';
 import { Share2, Users, ArrowLeft, PlusCircle, UserMinus, LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function CommunityView() {
-  const { id } = useParams<{ id: string }>();
+  const { id, chatId } = useParams<{ id: string, chatId?: string }>();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { t } = useTranslation();
@@ -196,10 +197,18 @@ export default function CommunityView() {
             </div>
           )}
 
-          <h2 style={{ marginBottom: '1rem' }}>לוח מודעות קהילתי</h2>
-          {/* Note: In a real app, a community manager might need a special prop passed to Feed to enable "Delete Post" buttons.
-              For simplicity, we pass manager mode to Feed if they are manager. */}
-          <Feed communityId={id} isManager={isManager} />
+          {chatId ? (
+            <div style={{ marginTop: '1rem' }}>
+              <Chat />
+            </div>
+          ) : (
+            <>
+              <h2 style={{ marginBottom: '1rem' }}>לוח מודעות קהילתי</h2>
+              {/* Note: In a real app, a community manager might need a special prop passed to Feed to enable "Delete Post" buttons.
+                  For simplicity, we pass manager mode to Feed if they are manager. */}
+              <Feed communityId={id} isManager={isManager} />
+            </>
+          )}
         </>
       )}
     </div>

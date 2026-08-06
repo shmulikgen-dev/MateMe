@@ -6,7 +6,7 @@ import { ArrowLeft, Send, Award, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function Chat() {
-  const { chatId } = useParams<{ chatId: string }>();
+  const { chatId, id: communityId } = useParams<{ chatId: string, id?: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [messages, setMessages] = useState<any[]>([]);
@@ -156,7 +156,10 @@ export default function Chat() {
       {/* Header */}
       <div className="glass" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', borderRadius: '0 0 16px 16px', zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <button onClick={() => navigate(-1)} style={{ background: 'transparent', border: 'none', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+          <button onClick={() => {
+            if (communityId) navigate(`/community/${communityId}`);
+            else navigate(-1);
+          }} style={{ background: 'transparent', border: 'none', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
             <ArrowLeft size={20} /> Back
           </button>
           <h3 style={{ margin: 0 }}>Chat with {partnerAlias}</h3>

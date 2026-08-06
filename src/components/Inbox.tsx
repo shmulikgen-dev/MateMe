@@ -112,7 +112,7 @@ export default function Inbox() {
           <div 
             key={chat.id} 
             className="glass" 
-            onClick={() => navigate(`/chat/${chat.id}`)}
+            onClick={() => navigate(chat.communityId ? `/community/${chat.communityId}/chat/${chat.id}` : `/chat/${chat.id}`)}
             style={{ 
               padding: isDeleting ? '0' : '1rem', 
               cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
@@ -141,6 +141,9 @@ export default function Inbox() {
                 {chat.partnerAlias}
                 {chat.unreadCount?.[auth.currentUser?.uid || ''] > 0 && (
                   <span style={{ background: '#ef4444', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '10px' }}>{t('new', 'חדש')}</span>
+                )}
+                {chat.communityId && (
+                  <span style={{ background: 'var(--secondary-color)', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '10px' }}>קהילה</span>
                 )}
               </div>
               {chat.chatTopic && (

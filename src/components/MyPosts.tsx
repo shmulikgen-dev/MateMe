@@ -175,10 +175,12 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
 
   const handleAccept = async (responseId: string, responderId: string, postId: string) => {
     if (!auth.currentUser) return;
+    const post = posts.find(p => p.id === postId);
     
     // Create Chat
     const chatRef = await addDoc(collection(db, 'chats'), {
       postId,
+      communityId: post?.communityId || null,
       users: [auth.currentUser.uid, responderId],
       status: 'active',
       createdAt: new Date()
@@ -197,7 +199,11 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
     await updateDoc(doc(db, 'posts', postId), { status: 'resolved' });
 
     alert(t('matchAccepted'));
-    navigate(`/chat/${chatRef.id}`);
+    if (post?.communityId) {
+      navigate(`/community/${post.communityId}/chat/${chatRef.id}`);
+    } else {
+      navigate(`/chat/${chatRef.id}`);
+    }
   };
 
   const initiateTenderMode = async (postId: string) => {
