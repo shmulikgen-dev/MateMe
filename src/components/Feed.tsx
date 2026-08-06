@@ -102,18 +102,19 @@ export default function Feed({ embedded = false, communityId, isManager = false 
       await updateDoc(postRef, updates);
       
       if (postType === 'supply' && post.supplyType === 'item') {
+        const resolvedCommunityId = post.communityId || communityId || null;
         // Create Chat immediately
         const chatRef = await addDoc(collection(db, 'chats'), {
           postId,
-          communityId: post.communityId || null,
+          communityId: resolvedCommunityId,
           users: [auth.currentUser.uid, post.creatorId],
           status: 'active',
           createdAt: serverTimestamp()
         });
         
         // Navigate to the chat
-        if (post.communityId) {
-          navigate(`/community/${post.communityId}/chat/${chatRef.id}`);
+        if (resolvedCommunityId) {
+          navigate(`/community/${resolvedCommunityId}/chat/${chatRef.id}`);
         } else {
           navigate(`/chat/${chatRef.id}`);
         }

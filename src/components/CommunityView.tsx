@@ -206,7 +206,7 @@ export default function CommunityView() {
               <h2 style={{ marginBottom: '1rem' }}>לוח מודעות קהילתי</h2>
               {/* Note: In a real app, a community manager might need a special prop passed to Feed to enable "Delete Post" buttons.
                   For simplicity, we pass manager mode to Feed if they are manager. */}
-              <Feed communityId={id} isManager={isManager} />
+              <Feed communityId={id} isManager={isManager} embedded={true} />
             </>
           )}
         </>
