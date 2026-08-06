@@ -10,6 +10,7 @@ export default function Inbox() {
   const { t } = useTranslation();
   const [activeChats, setActiveChats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingChats, setDeletingChats] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -67,12 +68,19 @@ export default function Inbox() {
   const handleDeleteChat = async (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation();
     try {
+      setDeletingChats(prev => [...prev, chatId]);
+      
       await updateDoc(doc(db, 'chats', chatId), {
         deletedFor: arrayUnion(auth.currentUser?.uid)
       });
-      setActiveChats(prev => prev.filter(c => c.id !== chatId));
+      
+      setTimeout(() => {
+        setActiveChats(prev => prev.filter(c => c.id !== chatId));
+        setDeletingChats(prev => prev.filter(id => id !== chatId));
+      }, 1500);
     } catch(err) {
       console.error("Error deleting chat", err);
+      setDeletingChats(prev => prev.filter(id => id !== chatId));
     }
   };
 
@@ -97,13 +105,37 @@ export default function Inbox() {
         <MessageCircle size={20} /> {t('myActiveChats', 'My Active Chats')}
       </h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-        {activeChats.map(chat => (
+        {activeChats.map(chat => {
+          const isDeleting = deletingChats.includes(chat.id);
+          
+          return (
           <div 
             key={chat.id} 
             className="glass" 
             onClick={() => navigate(`/chat/${chat.id}`)}
-            style={{ padding: '1rem', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: chat.status === 'completed' ? '4px solid gray' : '4px solid var(--primary-color)' }}
+            style={{ 
+              padding: isDeleting ? '0' : '1rem', 
+              cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+              borderLeft: isDeleting ? 'none' : (chat.status === 'completed' ? '4px solid gray' : '4px solid var(--primary-color)'),
+              maxHeight: isDeleting ? '0' : '200px',
+              opacity: isDeleting ? 0 : 1,
+              transform: isDeleting ? 'scale(0.95)' : 'scale(1)',
+              transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
           >
+            {isDeleting && (
+              <div style={{
+                position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                zIndex: 10, color: 'white', fontWeight: 'bold', fontSize: '1.2rem',
+                transition: 'opacity 0.3s ease'
+              }}>
+                השיחה נמחקה
+              </div>
+            )}
             <div>
               <div style={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 {chat.partnerAlias}
@@ -129,7 +161,7 @@ export default function Inbox() {
               </button>
             </div>
           </div>
-        ))}
+        )})}
       </div>
     </div>
   );

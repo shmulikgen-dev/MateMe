@@ -203,12 +203,13 @@ export default function Feed({ embedded = false, communityId, isManager = false 
         
         return (
         <div key={post.id} className={`glass ${isIgnoring ? '' : 'animate-fade-in'}`} style={{ 
-            padding: '1.5rem', 
-            marginBottom: '1.2rem', 
+            padding: isIgnoring ? '0' : '1.5rem', 
+            marginBottom: isIgnoring ? '0' : '1.2rem', 
+            maxHeight: isIgnoring ? '0' : '800px',
             animationDelay: isIgnoring ? '0s' : `${index * 0.1}s`, 
-            borderRight: post.isPopup ? 'none' : `4px solid ${post.type === 'demand' ? 'var(--primary-color)' : 'var(--secondary-color)'}`,
-            border: post.isPopup ? '2px solid #ef4444' : '1px solid var(--glass-border)',
-            boxShadow: post.isPopup ? '0 0 15px rgba(239, 68, 68, 0.3)' : 'none',
+            borderRight: isIgnoring ? 'none' : (post.isPopup ? 'none' : `4px solid ${post.type === 'demand' ? 'var(--primary-color)' : 'var(--secondary-color)'}`),
+            border: isIgnoring ? 'none' : (post.isPopup ? '2px solid #ef4444' : '1px solid var(--glass-border)'),
+            boxShadow: post.isPopup && !isIgnoring ? '0 0 15px rgba(239, 68, 68, 0.3)' : 'none',
             opacity: isIgnoring ? 0 : 1,
             transform: isIgnoring ? 'scale(0.95)' : 'scale(1)',
             transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
