@@ -220,3 +220,44 @@ input[type=range]::-webkit-slider-runnable-track {
 
 option { background-color: var(--bg-dark); color: white; }
 
+
+/* Mobile Responsiveness & Polish */
+@media (max-width: 768px) {
+  body {
+    font-size: 15px; /* Slightly smaller text on mobile */
+  }
+  
+  .glass {
+    padding: 1.2rem;
+    border-radius: 12px;
+  }
+  
+  /* Make buttons stack properly on small screens */
+  .flex-mobile-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  /* Adjust modal sizes on mobile */
+  .modal-content {
+    width: 95% !important;
+    padding: 1.5rem !important;
+  }
+}
+
+/* Animations for modal popup / fade-ins */
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fadeInScale 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Smooth active states for touch devices */
+button:active {
+  transform: scale(0.97) !important;
+}
+
