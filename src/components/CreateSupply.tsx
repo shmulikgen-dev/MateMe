@@ -7,6 +7,7 @@ import { geohashForLocation } from 'geofire-common';
 import { MapPin, Navigation, ArrowLeft, Tags, Hourglass, Paperclip } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../useAuth';
+import { compressImage } from '../utils/imageCompressor';
 
 export default function CreateSupply() {
   const { t } = useTranslation();
@@ -28,16 +29,28 @@ export default function CreateSupply() {
   const [isPopup, setIsPopup] = useState(false);
   const [file, setFile] = useState<File | null>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selected = e.target.files[0];
-      if (selected.size > 1 * 1024 * 1024) {
-        alert(t('fileTooLarge', 'הקובץ חורג מ-1 מגה-בייט. אנא בחר קובץ קטן יותר.'));
+      
+      if (selected.size > 10 * 1024 * 1024) {
+        alert(t('fileTooLarge', 'הקובץ חורג מ-10 מגה-בייט. אנא בחר קובץ קטן יותר.'));
         e.target.value = '';
         setFile(null);
         return;
       }
-      setFile(selected);
+      
+      if (selected.type.startsWith('image/')) {
+        try {
+          const compressed = await compressImage(selected);
+          setFile(compressed);
+        } catch (error) {
+          console.error("Error compressing image:", error);
+          setFile(selected);
+        }
+      } else {
+        setFile(selected);
+      }
     }
   };
 

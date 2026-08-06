@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { db, auth } from '../firebase';
+import { db, auth, storage } from '../firebase';
 import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { geohashForLocation } from 'geofire-common';
-import { MapPin, Navigation, ArrowLeft, Tags } from 'lucide-react';
+import { MapPin, Navigation, ArrowLeft, Tags, Paperclip } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../useAuth';
+import { compressImage } from '../utils/imageCompressor';
 
 export default function CreateDemand() {
   const { t } = useTranslation();
@@ -25,6 +27,32 @@ export default function CreateDemand() {
   const [budget, setBudget] = useState('');
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const selected = e.target.files[0];
+      
+      if (selected.size > 10 * 1024 * 1024) {
+        alert(t('fileTooLarge', 'הקובץ חורג מ-10 מגה-בייט. אנא בחר קובץ קטן יותר.'));
+        e.target.value = '';
+        setFile(null);
+        return;
+      }
+      
+      if (selected.type.startsWith('image/')) {
+        try {
+          const compressed = await compressImage(selected);
+          setFile(compressed);
+        } catch (error) {
+          console.error("Error compressing image:", error);
+          setFile(selected);
+        }
+      } else {
+        setFile(selected);
+      }
+    }
+  };
 
   const handleCreate = async () => {
     if (!description || !auth.currentUser) return;
@@ -46,6 +74,21 @@ export default function CreateDemand() {
         const expiresAt = new Date();
         expiresAt.setHours(expiresAt.getHours() + ttlHours);
 
+        let fileUrl = null;
+        let fileName = null;
+        let fileType = null;
+
+        if (file) {
+          setStatus('Uploading file...');
+          const fileRef = ref(storage, `posts/${auth.currentUser!.uid}_${Date.now()}_${file.name}`);
+          await uploadBytes(fileRef, file);
+          fileUrl = await getDownloadURL(fileRef);
+          fileName = file.name;
+          fileType = file.type;
+        }
+
+        setStatus('Saving post...');
+
         const postData: any = {
           creatorId: auth.currentUser!.uid,
           creatorAlias: profile?.alias || 'Anonymous',
@@ -61,7 +104,10 @@ export default function CreateDemand() {
           createdAt: serverTimestamp(),
           expiresAt: expiresAt.toISOString(),
           status: 'active',
-          responseCount: 0
+          responseCount: 0,
+          fileUrl,
+          fileName,
+          fileType
         };
 
         if (communityId) {
@@ -146,6 +192,21 @@ export default function CreateDemand() {
           onChange={(e) => setDescription(e.target.value)}
           style={{ width: '100%', minHeight: '120px', marginBottom: '1.5rem', boxSizing: 'border-box' }}
         />
+        
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', border: '1px dashed var(--glass-border)' }}>
+            <Paperclip size={20} color="var(--primary-color)" />
+            <span style={{ fontSize: '0.9rem', color: file ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+              {file ? file.name : t('attachFile', 'צרף תמונה או מסמך (אופציונלי)')}
+            </span>
+            <input 
+              type="file" 
+              accept="image/*,.pdf,.doc,.docx"
+              onChange={handleFileChange} 
+              style={{ display: 'none' }} 
+            />
+          </label>
+        </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
           <label style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
