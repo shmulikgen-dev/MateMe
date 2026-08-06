@@ -56,7 +56,7 @@ export default function NotificationBell() {
     }
     if (notif.postId) {
       navigate(`/post/${notif.postId}`);
-    } else if (notif.communityId) {
+    } else if (notif.communityId && notif.communityId !== 'global') {
       if (notif.type === 'community_invite') {
         navigate(`/join/${notif.communityId}`);
       } else {

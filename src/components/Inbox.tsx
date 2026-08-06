@@ -142,7 +142,7 @@ export default function Inbox() {
                 {chat.unreadCount?.[auth.currentUser?.uid || ''] > 0 && (
                   <span style={{ background: '#ef4444', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '10px' }}>{t('new', 'חדש')}</span>
                 )}
-                {chat.communityId && (
+                {(chat.communityId && chat.communityId !== 'global') && (
                   <span style={{ background: 'var(--secondary-color)', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '10px' }}>קהילה</span>
                 )}
               </div>
