@@ -54,7 +54,7 @@ export default function PostView() {
       
       await updateDoc(postRef, updates);
       
-      if (post.type === 'supply' && post.supplyType === 'item') {
+      if (post.type === 'supply' && post.supplyType !== 'event') {
         // Create Chat immediately
         const chatRef = await addDoc(collection(db, 'chats'), {
           postId: post.id,
