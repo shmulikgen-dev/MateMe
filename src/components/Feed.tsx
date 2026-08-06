@@ -103,7 +103,7 @@ export default function Feed({ embedded = false, communityId, isManager = false 
       await updateDoc(postRef, updates);
       
       if (postType === 'supply' && post.supplyType !== 'event') {
-        const resolvedCommunityId = post.communityId || communityId || null;
+        const resolvedCommunityId = (post.communityId && post.communityId !== 'global') ? post.communityId : (communityId || null);
         // Create Chat immediately
         const chatRef = await addDoc(collection(db, 'chats'), {
           postId,

@@ -178,9 +178,10 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
     const post = myPosts.find((p: any) => p.id === postId);
     
     // Create Chat
+    const resolvedCommunityId = (post?.communityId && post.communityId !== 'global') ? post.communityId : null;
     const chatRef = await addDoc(collection(db, 'chats'), {
       postId,
-      communityId: post?.communityId || null,
+      communityId: resolvedCommunityId,
       users: [auth.currentUser.uid, responderId],
       status: 'active',
       createdAt: new Date()
@@ -199,8 +200,8 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
     await updateDoc(doc(db, 'posts', postId), { status: 'resolved' });
 
     alert(t('matchAccepted'));
-    if (post?.communityId) {
-      navigate(`/community/${post.communityId}/chat/${chatRef.id}`);
+    if (resolvedCommunityId) {
+      navigate(`/community/${resolvedCommunityId}/chat/${chatRef.id}`);
     } else {
       navigate(`/chat/${chatRef.id}`);
     }

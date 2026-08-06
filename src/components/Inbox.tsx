@@ -112,7 +112,7 @@ export default function Inbox() {
           <div 
             key={chat.id} 
             className="glass" 
-            onClick={() => navigate(chat.communityId ? `/community/${chat.communityId}/chat/${chat.id}` : `/chat/${chat.id}`)}
+            onClick={() => navigate((chat.communityId && chat.communityId !== 'global') ? `/community/${chat.communityId}/chat/${chat.id}` : `/chat/${chat.id}`)}
             style={{ 
               padding: isDeleting ? '0' : '1rem', 
               cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
