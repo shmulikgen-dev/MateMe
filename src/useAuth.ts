@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { auth, db } from './firebase';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import type { User } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
 export interface UserProfile {
   uid: string;
@@ -20,6 +20,7 @@ export interface UserProfile {
   myCommunities?: string[];
   ignoredCommunities?: string[];
   ignoredPosts?: string[];
+  hasCompletedOnboarding?: boolean;
 }
 
 export function useAuth() {
@@ -75,13 +76,22 @@ export function useAuth() {
       subscribedCategories: profileData.subscribedCategories || [],
       myCommunities: profileData.myCommunities || [],
       ignoredCommunities: profileData.ignoredCommunities || [],
-      ignoredPosts: profileData.ignoredPosts || []
+      ignoredPosts: profileData.ignoredPosts || [],
+      hasCompletedOnboarding: false
     };
     await setDoc(doc(db, 'users', user.uid), newProfile);
     setProfile(newProfile);
   };
 
+  const completeOnboarding = async () => {
+    if (!user || !profile) return;
+    await updateDoc(doc(db, 'users', user.uid), {
+      hasCompletedOnboarding: true
+    });
+    setProfile({ ...profile, hasCompletedOnboarding: true });
+  };
+
   const logout = () => auth.signOut();
 
-  return { user, profile, loading, loginAnonymously, registerUser, logout };
+  return { user, profile, loading, loginAnonymously, registerUser, completeOnboarding, logout };
 }

@@ -17,6 +17,7 @@ import PostView from './components/PostView';
 import MyCommunities from './components/MyCommunities';
 import JoinCommunity from './components/JoinCommunity';
 import CommunityView from './components/CommunityView';
+import OnboardingModal from './components/OnboardingModal';
 import './i18n';
 import './App.css';
 
@@ -192,6 +193,7 @@ function App() {
 
   return (
     <>
+      <OnboardingModal />
       {user && profile && <NotificationBell />}
       <Routes>
         <Route path="/" element={<Home />} />

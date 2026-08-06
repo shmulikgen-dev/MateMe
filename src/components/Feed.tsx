@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
 import { collection, doc, addDoc, serverTimestamp, updateDoc, deleteDoc, arrayUnion } from 'firebase/firestore';
-import { MapPin, ArrowLeft, SearchX, Share2, Flag, Hourglass, Paperclip, Trash2, XCircle } from 'lucide-react';
+import { MapPin, ArrowLeft, SearchX, Search, Share2, Flag, Hourglass, Paperclip, Trash2, XCircle } from 'lucide-react';
 import { useFeed } from '../useFeed';
 
 interface FeedProps {
@@ -20,6 +20,7 @@ export default function Feed({ embedded = false, communityId, isManager = false 
   const [bids, setBids] = useState<{[key: string]: string}>({});
   const [reportModal, setReportModal] = useState<{isOpen: boolean, postId: string}>({isOpen: false, postId: ''});
   const [reportReason, setReportReason] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [toastMsg, setToastMsg] = useState('');
   const [ignoringPosts, setIgnoringPosts] = useState<string[]>([]);
 
@@ -175,7 +176,15 @@ export default function Feed({ embedded = false, communityId, isManager = false 
 
   if (!location) return <div style={{ textAlign: 'center', padding: '2rem' }}>{t('lookingForLocation')}</div>;
 
-  const displayedPosts = posts.slice(0, visibleCount);
+  const filteredPosts = posts.filter(post => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (post.title?.toLowerCase().includes(q)) || 
+           (post.description?.toLowerCase().includes(q)) ||
+           (post.tags && post.tags.some((tag: string) => tag.toLowerCase().includes(q)));
+  });
+
+  const displayedPosts = filteredPosts.slice(0, visibleCount);
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: embedded ? '0' : '1rem' }}>
@@ -198,6 +207,17 @@ export default function Feed({ embedded = false, communityId, isManager = false 
       <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: embedded ? '1.5rem' : '0' }}>
         <MapPin /> {t('localFeed')}
       </h2>
+      
+      <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '0.5rem 1rem' }}>
+        <Search size={20} color="var(--text-secondary)" style={{ marginRight: '0.5rem' }} />
+        <input 
+          type="text" 
+          placeholder={t('searchPostsPlaceholder', 'חפש בלוח המודעות...')} 
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{ width: '100%', background: 'transparent', border: 'none', color: 'white', outline: 'none' }}
+        />
+      </div>
       
       {loading && <p>{t('loadingPosts')}</p>}
       
@@ -371,7 +391,7 @@ export default function Feed({ embedded = false, communityId, isManager = false 
         </div>
       )})}
       
-      {posts.length > visibleCount && (
+      {filteredPosts.length > visibleCount && (
         <button 
           className="btn" 
           onClick={() => setVisibleCount(prev => prev + 10)}
