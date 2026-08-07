@@ -24,6 +24,8 @@ export default function ProfileSettings() {
   
   const [alias, setAlias] = useState('');
   const [city, setCity] = useState('');
+  const [bio, setBio] = useState('');
+  const [pushEnabled, setPushEnabled] = useState(false);
   const [subscribedCategories, setSubscribedCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
@@ -32,6 +34,8 @@ export default function ProfileSettings() {
     if (profile) {
       setAlias(profile.alias || '');
       setCity(profile.city || '');
+      setBio(profile.bio || '');
+      setPushEnabled(profile.pushEnabled || false);
       setSubscribedCategories(profile.subscribedCategories || []);
     }
   }, [profile]);
@@ -40,6 +44,25 @@ export default function ProfileSettings() {
     setSubscribedCategories(prev => 
       prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
     );
+  };
+
+  const handlePushToggle = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const isChecked = e.target.checked;
+    if (isChecked) {
+      if ('Notification' in window) {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          setPushEnabled(true);
+        } else {
+          alert('Notification permission denied by browser.');
+          setPushEnabled(false);
+        }
+      } else {
+        alert('Push notifications are not supported by your browser.');
+      }
+    } else {
+      setPushEnabled(false);
+    }
   };
 
   const handleSave = async () => {
@@ -51,6 +74,8 @@ export default function ProfileSettings() {
       await updateDoc(userRef, {
         alias,
         city,
+        bio,
+        pushEnabled,
         subscribedCategories
       });
       setStatus(t('settingsSaved'));
@@ -93,6 +118,16 @@ export default function ProfileSettings() {
           />
         </div>
 
+        <div style={{ marginBottom: '2rem' }}>
+          <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.5rem' }}>{t('bio', 'קצת עלי')}</label>
+          <textarea 
+            value={bio} 
+            onChange={(e) => setBio(e.target.value)} 
+            placeholder={t('bioPlaceholder', 'כתוב כמה מילים על עצמך, במה אתה יכול לעזור...')}
+            style={{ width: '100%', padding: '0.8rem', boxSizing: 'border-box', minHeight: '100px', borderRadius: '8px' }} 
+          />
+        </div>
+
         <hr style={{ border: 'none', borderTop: '1px solid var(--glass-border)', margin: '2rem 0' }} />
 
         <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -102,6 +137,19 @@ export default function ProfileSettings() {
           {t('notificationDesc')}
         </p>
 
+        <div style={{ marginBottom: '1.5rem', background: 'rgba(0,0,0,0.05)', padding: '1rem', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <strong style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <BellRing size={18} /> {t('enablePushNotifications', 'אפשר התראות פוש (Push)')}
+          </strong>
+          <input 
+            type="checkbox" 
+            checked={pushEnabled} 
+            onChange={handlePushToggle} 
+            style={{ width: '20px', height: '20px', accentColor: 'var(--primary-color)' }}
+          />
+        </div>
+
+        <h4 style={{ margin: '0 0 1rem 0' }}>{t('subscribeCategories', 'התראות עבור קטגוריות:')}</h4>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginBottom: '2rem' }}>
           {CATEGORIES.map(cat => (
             <label key={cat} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', padding: '0.8rem', background: 'rgba(0,0,0,0.1)', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>

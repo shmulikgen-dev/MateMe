@@ -187,9 +187,22 @@ export default function CommunityView() {
                 <h3 style={{ margin: '0 0 1rem 0' }}>חברי הקהילה ({members.length})</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   {members.map(m => (
-                    <div key={m.uid} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.05)', padding: '0.8rem', borderRadius: '8px' }}>
-                      <span style={{ fontWeight: 'bold' }}>{m.alias || 'Anonymous'}</span>
-                      <span style={{ opacity: 0.7, fontSize: '0.8rem' }}>⭐ {m.trustScore || 0}</span>
+                    <div key={m.uid} style={{ display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.05)', padding: '0.8rem', borderRadius: '8px', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontWeight: 'bold' }}>{m.alias || 'Anonymous'}</span>
+                        <span style={{ opacity: 0.7, fontSize: '0.8rem' }}>⭐ {m.trustScore || 0}</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        {(m.trustScore || 0) >= 20 && (
+                          <span style={{ background: 'rgba(255, 215, 0, 0.2)', color: '#FFD700', padding: '2px 6px', borderRadius: '8px', fontSize: '0.7rem' }}>🌟 עוזר מתמיד</span>
+                        )}
+                        {m.createdAt && (Date.now() - m.createdAt < 7 * 24 * 60 * 60 * 1000) && (
+                          <span style={{ background: 'rgba(46, 204, 113, 0.2)', color: '#2ecc71', padding: '2px 6px', borderRadius: '8px', fontSize: '0.7rem' }}>🌱 חדש בשכונה</span>
+                        )}
+                        {community?.managerIds?.includes(m.uid) && (
+                          <span style={{ background: 'rgba(155, 89, 182, 0.2)', color: '#9b59b6', padding: '2px 6px', borderRadius: '8px', fontSize: '0.7rem' }}>👑 מנהל</span>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

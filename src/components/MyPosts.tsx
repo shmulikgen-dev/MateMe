@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
-import { collection, query, where, getDocs, updateDoc, doc, addDoc, deleteDoc, getDoc } from 'firebase/firestore';
-import { ArrowLeft, Inbox, CheckCircle, Trash2, Ghost, PackageOpen, Share2, Link, Flag } from 'lucide-react';
+import { collection, query, where, getDocs, updateDoc, doc, addDoc, deleteDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { ArrowLeft, Inbox, CheckCircle, Trash2, Ghost, PackageOpen, Share2, Link, Flag, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface MyPostsProps {
@@ -215,9 +215,29 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
   };
 
   const handleDeletePost = async (postId: string) => {
-    if (window.confirm(t('confirmDelete'))) {
+    if (!window.confirm(t('confirmDelete', 'Are you sure you want to delete this post?'))) return;
+    try {
       await deleteDoc(doc(db, 'posts', postId));
       fetchMyPosts();
+    } catch (err) {
+      console.error(err);
+      alert(t('errorOccurred'));
+    }
+  };
+
+  const handleRenewPost = async (postId: string) => {
+    try {
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7); // Renew for 7 days
+      await updateDoc(doc(db, 'posts', postId), {
+        createdAt: serverTimestamp(),
+        expiresAt: expiresAt.toISOString()
+      });
+      alert(t('postRenewed', 'המודעה חודשה בהצלחה!'));
+      fetchMyPosts();
+    } catch (e) {
+      console.error(e);
+      alert(t('errorOccurred'));
     }
   };
 
@@ -310,6 +330,10 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
                     <Share2 size={16} />
                   </button>
 
+                  <button onClick={() => handleRenewPost(post.id)} title={t('renewPost', 'חדש מודעה')} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0 }}>
+                    <RefreshCw size={16} />
+                  </button>
+
                   <button onClick={() => handleDeletePost(post.id)} title="Delete" style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0 }}>
                     <Trash2 size={16} />
                   </button>
@@ -398,6 +422,7 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
                   <span style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.8rem', color: offer.status === 'rejected' ? 'var(--accent-color)' : 'var(--primary-color)' }}>
                     {offer.bidAmount ? `${t('yourBid')} ₪${offer.bidAmount}` : t('myOffers')}
                   </span>
+                  {offer.bidText && <div style={{ fontSize: '0.85rem', marginTop: '4px', fontStyle: 'italic', opacity: 0.9 }}>"{offer.bidText}"</div>}
                   {offer.createdAt && (
                     <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>
                       {new Date(offer.createdAt?.toMillis?.() || offer.createdAt).toLocaleString('he-IL', { dateStyle: 'short', timeStyle: 'short' })}
@@ -456,6 +481,7 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
               <div>
                 <strong>{res.alias}</strong>
                 {res.bidAmount && <div style={{ color: 'var(--accent-color)', fontWeight: 'bold' }}>{t('yourBid')}: ₪{res.bidAmount}</div>}
+                {res.bidText && <div style={{ fontSize: '0.85rem', fontStyle: 'italic', opacity: 0.9, marginTop: '2px' }}>"{res.bidText}"</div>}
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                   {t('statusLabel', { status: getTranslatedStatus(res.status) })}
                 </div>

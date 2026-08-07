@@ -21,6 +21,9 @@ export interface UserProfile {
   ignoredCommunities?: string[];
   ignoredPosts?: string[];
   hasCompletedOnboarding?: boolean;
+  bio?: string;
+  createdAt?: number;
+  pushEnabled?: boolean;
 }
 
 export function useAuth() {
@@ -74,10 +77,13 @@ export function useAuth() {
       role: 'user', // Default role
       trustScore: 0, // Starting trust score
       subscribedCategories: profileData.subscribedCategories || [],
-      myCommunities: profileData.myCommunities || [],
-      ignoredCommunities: profileData.ignoredCommunities || [],
+      myCommunities: [],
+      ignoredCommunities: [],
       ignoredPosts: profileData.ignoredPosts || [],
-      hasCompletedOnboarding: false
+      hasCompletedOnboarding: false,
+      createdAt: Date.now(),
+      bio: '',
+      pushEnabled: false
     };
     await setDoc(doc(db, 'users', user.uid), newProfile);
     setProfile(newProfile);

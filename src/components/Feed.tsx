@@ -17,7 +17,7 @@ export default function Feed({ embedded = false, communityId, isManager = false 
   const navigate = useNavigate();
   const { posts, setPosts, loading, location } = useFeed(150, communityId);
   const [visibleCount, setVisibleCount] = useState(10);
-  const [bids, setBids] = useState<{[key: string]: string}>({});
+  const [bids, setBids] = useState<{[key: string]: {amount: string, text: string}}>({});
   const [reportModal, setReportModal] = useState<{isOpen: boolean, postId: string}>({isOpen: false, postId: ''});
   const [reportReason, setReportReason] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -84,7 +84,8 @@ export default function Feed({ embedded = false, communityId, isManager = false 
       const postType = post.type;
       if (!auth.currentUser) return;
       
-      const bidAmount = isTender ? Number(bids[postId]) : null;
+      const bidAmount = isTender ? Number(bids[postId]?.amount) : null;
+      const bidText = isTender ? bids[postId]?.text || '' : '';
       if (isTender && (!bidAmount || bidAmount <= 0)) {
         alert(t('pleaseEnterValidBid'));
         return;
@@ -122,12 +123,12 @@ export default function Feed({ embedded = false, communityId, isManager = false 
         return;
       }
       
-      // Create response document
       await addDoc(collection(db, 'responses'), {
         postId,
         responderId: auth.currentUser.uid,
         status: 'pending',
         bidAmount,
+        bidText,
         createdAt: serverTimestamp()
       });
       
@@ -351,18 +352,24 @@ export default function Feed({ embedded = false, communityId, isManager = false 
               <span style={{ fontSize: '0.9rem' }}>{t('yourPost', 'זהו פוסט שאתה פרסמת')}</span>
             </div>
           ) : post.status === 'tender' ? (
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <input 
                 type="number" 
                 placeholder={t('yourBid')} 
-                value={bids[post.id] || ''}
-                onChange={e => setBids({...bids, [post.id]: e.target.value})}
-                style={{ flex: 1, padding: '0.8rem', boxSizing: 'border-box' }}
+                value={bids[post.id]?.amount || ''}
+                onChange={e => setBids({...bids, [post.id]: {...(bids[post.id] || {}), amount: e.target.value}})}
+                style={{ padding: '0.8rem', boxSizing: 'border-box' }}
+              />
+              <textarea
+                placeholder={t('bidDescription', 'הסבר קצר למה כדאי לבחור בך... (אופציונלי)')}
+                value={bids[post.id]?.text || ''}
+                onChange={e => setBids({...bids, [post.id]: {...(bids[post.id] || {}), text: e.target.value}})}
+                style={{ padding: '0.8rem', boxSizing: 'border-box', minHeight: '60px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)' }}
               />
               <button 
                 className="btn" 
                 onClick={() => handleConnect(post, true)}
-                style={{ flex: 1, background: 'var(--accent-color)' }}
+                style={{ background: 'var(--accent-color)' }}
               >
                 {t('submitBid')}
               </button>

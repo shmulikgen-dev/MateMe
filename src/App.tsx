@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
-import { Hand, Settings } from 'lucide-react';
+import { Hand, Settings, Moon, Sun } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './useAuth';
 import CreateDemand from './components/CreateDemand';
@@ -25,6 +25,18 @@ function Home() {
   const { t, i18n } = useTranslation();
   const { user, profile, logout } = useAuth();
   const navigate = useNavigate();
+  const [isLightMode, setIsLightMode] = useState(localStorage.getItem('theme') === 'light');
+  
+  const toggleTheme = () => {
+    const newTheme = isLightMode ? 'dark' : 'light';
+    setIsLightMode(!isLightMode);
+    localStorage.setItem('theme', newTheme);
+    if (newTheme === 'light') {
+      document.body.classList.add('light-mode');
+    } else {
+      document.body.classList.remove('light-mode');
+    }
+  };
   
   const toggleLanguage = () => {
     const newLang = i18n.language === 'he' ? 'en' : 'he';
@@ -40,6 +52,9 @@ function Home() {
   return (
     <div style={{ padding: '1rem', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
       <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: '0.5rem' }}>
+        <button onClick={toggleTheme} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '5px 10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          {isLightMode ? <Moon size={20} /> : <Sun size={20} />}
+        </button>
         <button onClick={toggleLanguage} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '5px 10px', borderRadius: '8px', cursor: 'pointer' }}>
           {i18n.language === 'he' ? 'EN' : 'HE'}
         </button>
@@ -118,6 +133,12 @@ function Home() {
 function App() {
   const { t } = useTranslation();
   const { user, profile, loading, loginAnonymously, registerUser } = useAuth();
+  
+  useEffect(() => {
+    if (localStorage.getItem('theme') === 'light') {
+      document.body.classList.add('light-mode');
+    }
+  }, []);
   
   // Registration Form State
   const [formData, setFormData] = useState({

@@ -10,6 +10,8 @@ interface PublicProfile {
   city: string;
   trustScore: number;
   interests?: string;
+  bio?: string;
+  createdAt?: number;
 }
 
 interface Transaction {
@@ -95,8 +97,28 @@ export default function UserProfileView() {
               <Award size={24} /> {t('trustPoints')}: {profile.trustScore || 0}
             </div>
 
+            {/* Gamification Badges */}
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap', marginTop: '1rem' }}>
+              {(profile.trustScore || 0) >= 20 && (
+                <span style={{ background: 'rgba(255, 215, 0, 0.2)', color: '#FFD700', padding: '4px 8px', borderRadius: '12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  🌟 עוזר מתמיד
+                </span>
+              )}
+              {profile.createdAt && (Date.now() - profile.createdAt < 7 * 24 * 60 * 60 * 1000) && (
+                <span style={{ background: 'rgba(46, 204, 113, 0.2)', color: '#2ecc71', padding: '4px 8px', borderRadius: '12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  🌱 חדש בשכונה
+                </span>
+              )}
+            </div>
+
+            {profile.bio && (
+              <div style={{ marginTop: '1.5rem', textAlign: 'center', fontStyle: 'italic', opacity: 0.9 }}>
+                "{profile.bio}"
+              </div>
+            )}
+
             {profile.interests && (
-              <div style={{ marginTop: '2rem', textAlign: 'left', background: 'rgba(0,0,0,0.1)', padding: '1rem', borderRadius: '12px' }}>
+              <div style={{ marginTop: '1.5rem', textAlign: 'left', background: 'rgba(0,0,0,0.1)', padding: '1rem', borderRadius: '12px' }}>
                 <strong style={{ opacity: 0.7 }}>Interests:</strong>
                 <p style={{ margin: '0.5rem 0 0 0' }}>{profile.interests}</p>
               </div>
