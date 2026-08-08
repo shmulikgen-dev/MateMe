@@ -35,23 +35,25 @@
 body.light-mode {
   color-scheme: light;
   
-  --bg-dark: #f8fafc;
-  --bg-gradient: radial-gradient(circle at top right, #ffffff, #e2e8f0);
+  /* Soft, warm, non-harsh background */
+  --bg-dark: #f4f3f0;
+  --bg-gradient: radial-gradient(circle at top right, #fdfcfb, #e9e7e2);
   
-  /* Primary colors can stay the same, but maybe tweaked for contrast */
-  --primary-color: #4f46e5;
-  --primary-glow: rgba(79, 70, 229, 0.2);
-  --secondary-color: #059669;
-  --secondary-glow: rgba(5, 150, 105, 0.2);
-  --accent-color: #e11d48;
+  /* Softer primary colors */
+  --primary-color: #5c6ac4; 
+  --primary-glow: rgba(92, 106, 196, 0.15);
+  --secondary-color: #2e8b57;
+  --secondary-glow: rgba(46, 139, 87, 0.15);
+  --accent-color: #d9534f;
 
-  /* Glassmorphism Tokens for light mode */
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(0, 0, 0, 0.1);
-  --glass-highlight: rgba(255, 255, 255, 0.9);
+  /* Subtle Glassmorphism for light mode */
+  --glass-bg: rgba(255, 255, 255, 0.45);
+  --glass-border: rgba(0, 0, 0, 0.04);
+  --glass-highlight: rgba(255, 255, 255, 0.6);
   
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
+  /* Softer text colors */
+  --text-primary: #334155;
+  --text-secondary: #64748b;
 }
 
 body {
