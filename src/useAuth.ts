@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react';
 import { auth, db } from './firebase';
-import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  sendPasswordResetEmail,
+  onAuthStateChanged 
+} from 'firebase/auth';
 import type { User } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
 export interface UserProfile {
   uid: string;
@@ -53,29 +58,53 @@ export function useAuth() {
     return unsubscribe;
   }, []);
 
-  const loginAnonymously = async () => {
+  const loginWithEmail = async (email: string, password: string) => {
+    setLoading(true);
     try {
-      setLoading(true);
-      await signInAnonymously(auth);
-    } catch (error) {
-      console.error("Auth error", error);
+      await signInWithEmailAndPassword(auth, email, password);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const registerUser = async (profileData: Partial<UserProfile>) => {
+  const checkEmailExists = async (email: string) => {
+    const q = query(collection(db, 'users'), where('email', '==', email));
+    const snap = await getDocs(q);
+    return !snap.empty;
+  };
+
+  const registerWithEmail = async (email: string, password: string) => {
+    setLoading(true);
+    try {
+      const exists = await checkEmailExists(email);
+      if (exists) {
+        throw new Error('email_exists');
+      }
+      await createUserWithEmailAndPassword(auth, email, password);
+      // Wait for onAuthStateChanged to pick this up. The profile will be created in App.tsx
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    await sendPasswordResetEmail(auth, email);
+  };
+
+  const registerProfile = async (profileData: Partial<UserProfile>) => {
     if (!user) return;
     const newProfile: UserProfile = {
       uid: user.uid,
       alias: profileData.alias || 'Anonymous',
-      email: profileData.email || '',
+      email: user.email || '',
       phone: profileData.phone || '',
       city: profileData.city || '',
       intent: profileData.intent || 'both',
       age: profileData.age || 0,
       interests: profileData.interests || '',
       language: profileData.language || 'he',
-      role: 'user', // Default role
-      trustScore: 0, // Starting trust score
+      role: 'user',
+      trustScore: 0,
       subscribedCategories: profileData.subscribedCategories || [],
       myCommunities: [],
       ignoredCommunities: [],
@@ -89,6 +118,13 @@ export function useAuth() {
     setProfile(newProfile);
   };
 
+  const updateProfile = async (profileData: Partial<UserProfile>) => {
+    if (!user || !profile) return;
+    const updatedProfile = { ...profile, ...profileData };
+    await updateDoc(doc(db, 'users', user.uid), profileData);
+    setProfile(updatedProfile);
+  };
+
   const completeOnboarding = async () => {
     if (!user || !profile) return;
     await updateDoc(doc(db, 'users', user.uid), {
@@ -99,5 +135,5 @@ export function useAuth() {
 
   const logout = () => auth.signOut();
 
-  return { user, profile, loading, loginAnonymously, registerUser, completeOnboarding, logout };
+  return { user, profile, loading, loginWithEmail, registerWithEmail, resetPassword, registerProfile, updateProfile, completeOnboarding, logout };
 }

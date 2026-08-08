@@ -18,6 +18,7 @@ import MyCommunities from './components/MyCommunities';
 import JoinCommunity from './components/JoinCommunity';
 import CommunityView from './components/CommunityView';
 import OnboardingModal from './components/OnboardingModal';
+import AuthScreen from './components/AuthScreen';
 import './i18n';
 import './App.css';
 
@@ -132,7 +133,7 @@ function Home() {
 
 function App() {
   const { t } = useTranslation();
-  const { user, profile, loading, loginAnonymously, registerUser } = useAuth();
+  const { user, profile, loading, registerProfile } = useAuth();
   
   useEffect(() => {
     if (localStorage.getItem('theme') === 'light') {
@@ -156,20 +157,12 @@ function App() {
   if (loading) return <div style={{textAlign: 'center', padding: '2rem'}}>Loading...</div>;
 
   if (!user) {
-    return (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <div className="glass animate-fade-in" style={{ padding: '2rem', maxWidth: '400px', margin: '0 auto' }}>
-          <h2 style={{ color: 'var(--primary-color)' }}>{t('appTitle')}</h2>
-          <p style={{ margin: '1rem 0' }}>{t('appSubtitle')}</p>
-          <button className="btn" onClick={loginAnonymously} style={{ marginTop: '1rem', width: '100%' }}>{t('enterAnonymously')}</button>
-        </div>
-      </div>
-    );
+    return <AuthScreen />;
   }
 
   // Enforce Registration before accessing the app
   if (user && !profile) {
-    const isFormValid = formData.alias && formData.email && formData.city && formData.tosAgreed;
+    const isFormValid = formData.alias && formData.city && formData.tosAgreed;
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
         <div className="glass animate-fade-in" style={{ padding: '2rem', maxWidth: '400px', margin: '0 auto', textAlign: 'left' }}>
@@ -178,7 +171,6 @@ function App() {
           
           <div style={{display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem'}}>
             <input type="text" placeholder="Alias (Publicly Visible) *" value={formData.alias} onChange={e => setFormData({...formData, alias: e.target.value})} style={{width: '100%'}} />
-            <input type="email" placeholder="Email Address *" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} style={{width: '100%'}} />
             <input type="tel" placeholder="Phone Number" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} style={{width: '100%'}} />
             <input type="text" placeholder="City of Residence *" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} style={{width: '100%'}} />
             
@@ -201,7 +193,7 @@ function App() {
 
           <button 
             className="btn" 
-            onClick={() => registerUser({...formData, age: Number(formData.age)})}
+            onClick={() => registerProfile({...formData, age: Number(formData.age)})}
             disabled={!isFormValid}
             style={{ width: '100%' }}
           >
