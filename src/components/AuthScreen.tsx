@@ -60,8 +60,10 @@ export default function AuthScreen() {
         setMode('login');
       } else if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
         setError(t('invalidCredentials', 'אימייל או סיסמה שגויים. נסה שוב.'));
+      } else if (err.code === 'auth/operation-not-allowed') {
+        setError('שגיאה: התחברות באמצעות אימייל וסיסמה חסומה בפיירבייס! אנא הכנס ל-Firebase Console -> Authentication -> Sign-in method והפעל את Email/Password.');
       } else {
-        setError(t('authError', 'אירעה שגיאה. נא לנסות שוב.'));
+        setError(t('authError', 'אירעה שגיאה. נא לנסות שוב.') + ' ' + (err.message || ''));
       }
     } finally {
       setLoading(false);
