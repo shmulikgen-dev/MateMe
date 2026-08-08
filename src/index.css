@@ -47,13 +47,13 @@ body.light-mode {
   --accent-color: #d9534f;
 
   /* Subtle Glassmorphism for light mode */
-  --glass-bg: rgba(255, 255, 255, 0.45);
-  --glass-border: rgba(0, 0, 0, 0.04);
-  --glass-highlight: rgba(255, 255, 255, 0.6);
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.7);
   
   /* Softer text colors */
-  --text-primary: #334155;
-  --text-secondary: #64748b;
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
 }
 
 body {
@@ -87,6 +87,18 @@ h1 {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 0.5rem;
+}
+
+body.light-mode h1 {
+  background: linear-gradient(135deg, var(--primary-color) 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+body.light-mode h1 {
+  background: linear-gradient(135deg, var(--primary-color) 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 p {
@@ -285,19 +297,6 @@ button:active {
   transform: scale(0.97) !important;
 }
 
-
-/* Light Mode Variables */
-body.light-mode {
-  --bg-dark: #f8fafc;
-  --bg-gradient: radial-gradient(circle at top right, #ffffff, #f1f5f9);
-  --text-primary: #1e293b;
-  --text-secondary: #475569;
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(0, 0, 0, 0.1);
-  --primary-color: #4f46e5;
-  --secondary-color: #059669;
-}
-
 body.light-mode .glass {
   background: var(--glass-bg);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
@@ -307,9 +306,9 @@ body.light-mode .glass {
 body.light-mode input, 
 body.light-mode select, 
 body.light-mode textarea {
-  background: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.7);
   color: var(--text-primary);
-  border-color: #cbd5e1;
+  border-color: rgba(0,0,0,0.1);
 }
 
 body.light-mode option {
@@ -317,11 +316,13 @@ body.light-mode option {
   color: #1e293b;
 }
 
-body.light-mode button {
-  color: #ffffff;
+/* Ensure buttons in light mode don't inherit light text blindly */
+body.light-mode button:not(.btn) {
+  color: var(--text-primary);
 }
 
 body.light-mode .btn {
   color: #ffffff;
 }
+
 
