@@ -4,6 +4,7 @@ import { db } from '../firebase';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, User, Award, MapPin, CheckCircle, MessageSquare } from 'lucide-react';
+import UserBadge from './UserBadge';
 
 interface PublicProfile {
   alias: string;
@@ -99,16 +100,7 @@ export default function UserProfileView() {
 
             {/* Gamification Badges */}
             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap', marginTop: '1rem' }}>
-              {(profile.trustScore || 0) >= 20 && (
-                <span style={{ background: 'rgba(255, 215, 0, 0.2)', color: '#FFD700', padding: '4px 8px', borderRadius: '12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  🌟 עוזר מתמיד
-                </span>
-              )}
-              {profile.createdAt && (Date.now() - profile.createdAt < 7 * 24 * 60 * 60 * 1000) && (
-                <span style={{ background: 'rgba(46, 204, 113, 0.2)', color: '#2ecc71', padding: '4px 8px', borderRadius: '12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  🌱 חדש בשכונה
-                </span>
-              )}
+              <UserBadge trustScore={profile.trustScore || 0} />
             </div>
 
             {profile.bio && (

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
-import { doc, getDoc, collection, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { ArrowLeft, Share2, Paperclip } from 'lucide-react';
+import { doc, getDoc, collection, addDoc, updateDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
+import { ArrowLeft, Share2, Paperclip, MessageSquare } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import UserBadge from './UserBadge';
 
 export default function PostView() {
   const { id } = useParams();
@@ -11,8 +12,10 @@ export default function PostView() {
   const { t } = useTranslation();
   
   const [post, setPost] = useState<any>(null);
+  const [responses, setResponses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [bidAmount, setBidAmount] = useState('');
+  const [bidText, setBidText] = useState('');
 
   useEffect(() => {
     if (!id) return;
@@ -20,7 +23,29 @@ export default function PostView() {
       try {
         const snap = await getDoc(doc(db, 'posts', id));
         if (snap.exists()) {
-          setPost({ id: snap.id, ...snap.data() });
+          const postData = { id: snap.id, ...(snap.data() as any) };
+          setPost(postData);
+          
+          if (auth.currentUser && postData.creatorId === auth.currentUser.uid) {
+            const q = query(collection(db, 'responses'), where('postId', '==', snap.id));
+            const resSnap = await getDocs(q);
+            
+            // For rich bids we need the responder info, so we fetch their user doc
+            const fetchedResponses = await Promise.all(resSnap.docs.map(async (d) => {
+              const respData = { id: d.id, ...d.data() } as any;
+              if (respData.responderId) {
+                try {
+                  const userSnap = await getDoc(doc(db, 'users', respData.responderId));
+                  if (userSnap.exists()) {
+                    respData.responderInfo = userSnap.data();
+                  }
+                } catch (e) {}
+              }
+              return respData;
+            }));
+            
+            setResponses(fetchedResponses);
+          }
         }
       } catch (err) {
         console.error(err);
@@ -78,6 +103,7 @@ export default function PostView() {
         responderId: auth.currentUser.uid,
         status: 'pending',
         bidAmount: bidNum,
+        bidText: bidText,
         createdAt: serverTimestamp()
       });
       
@@ -128,9 +154,7 @@ export default function PostView() {
           <span onClick={() => navigate(`/user/${post.creatorId}`)} style={{ fontWeight: 'bold', color: 'var(--primary-color)', cursor: 'pointer', textDecoration: 'underline' }}>
             {post.creatorAlias || 'Anonymous'}
           </span>
-          <span style={{ marginLeft: '0.5rem', fontSize: '0.8rem', opacity: 0.9 }}>
-            (⭐ {post.creatorTrustScore || 0})
-          </span>
+          <UserBadge trustScore={post.creatorTrustScore || 0} />
         </div>
 
         {post.category && (
@@ -164,21 +188,59 @@ export default function PostView() {
         {post.status !== 'resolved' && (
           <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', marginTop: '1.5rem' }}>
             {post.creatorId === auth.currentUser?.uid ? (
-              <div style={{ textAlign: 'center', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.2)', color: 'var(--text-secondary)' }}>
-                <span style={{ fontSize: '0.9rem' }}>{t('yourPost', 'זהו פוסט שאתה פרסמת')}</span>
+              <div style={{ textAlign: 'center', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.2)' }}>
+                <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{t('yourPost', 'זהו פוסט שאתה יצרת')}</span>
+                
+                {responses.length > 0 && (
+                  <div style={{ marginTop: '1rem', textAlign: 'right' }}>
+                    <h4 style={{ marginBottom: '1rem', color: 'var(--primary-color)' }}>הצעות ופניות שהתקבלו ({responses.length}):</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      {responses.map(resp => (
+                        <div key={resp.id} style={{ background: 'var(--glass-bg)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--glass-border)', textAlign: 'right' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <span onClick={() => navigate(`/user/${resp.responderId}`)} style={{ fontWeight: 'bold', cursor: 'pointer', textDecoration: 'underline' }}>
+                                {resp.responderInfo?.alias || 'Anonymous'}
+                              </span>
+                              <UserBadge trustScore={resp.responderInfo?.trustScore || 0} />
+                            </div>
+                            {resp.bidAmount && (
+                              <span style={{ fontWeight: 'bold', color: 'var(--secondary-color)', fontSize: '1.1rem' }}>₪{resp.bidAmount}</span>
+                            )}
+                          </div>
+                          {resp.bidText && (
+                            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.8rem', borderRadius: '8px', fontSize: '0.9rem', marginTop: '0.5rem', fontStyle: 'italic' }}>
+                              <MessageSquare size={14} style={{ display: 'inline', marginRight: '4px', opacity: 0.7 }} />
+                              {resp.bidText}
+                            </div>
+                          )}
+                          <div style={{ marginTop: '1rem', textAlign: 'left' }}>
+                            <button className="btn" style={{ fontSize: '0.8rem', padding: '0.4rem 1rem' }}>בחר ושוחח</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : post.status === 'active' || post.status === 'tender' ? (
               post.status === 'tender' ? (
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                   <input 
                     type="number" 
                     placeholder={t('enterYourBid', 'הכנס הצעת מחיר (₪)')}
                     value={bidAmount}
                     onChange={(e) => setBidAmount(e.target.value)}
-                    style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.2)', color: 'white' }}
+                    style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.2)', color: 'white' }}
+                  />
+                  <textarea
+                    placeholder={t('bidDescription', 'הוסף הסבר קצר למה כדאי לבחור בך... (לא חובה)')}
+                    value={bidText}
+                    onChange={(e) => setBidText(e.target.value)}
+                    style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.2)', color: 'white', minHeight: '60px' }}
                   />
                   <button className="btn" onClick={() => handleConnect(true)} style={{ background: 'var(--accent-color)' }}>
-                    {t('submitBid', 'שלח הצעה')}
+                    {t('submitBid', 'הגש הצעה')}
                   </button>
                 </div>
               ) : (

@@ -5,6 +5,7 @@ import { db, auth } from '../firebase';
 import { collection, doc, addDoc, serverTimestamp, updateDoc, deleteDoc, arrayUnion } from 'firebase/firestore';
 import { MapPin, ArrowLeft, SearchX, Search, Share2, Flag, Hourglass, Paperclip, Trash2, XCircle } from 'lucide-react';
 import { useFeed } from '../useFeed';
+import UserBadge from './UserBadge';
 
 interface FeedProps {
   embedded?: boolean;
@@ -308,9 +309,7 @@ export default function Feed({ embedded = false, communityId, isManager = false 
             >
               {post.creatorAlias || 'Anonymous'}
             </span>
-            <span style={{ marginLeft: '0.5rem', fontSize: '0.8rem', opacity: 0.9 }}>
-              (⭐ {post.creatorTrustScore || 0})
-            </span>
+            <UserBadge trustScore={post.creatorTrustScore || 0} />
             {post.createdAt && (
               <div style={{ fontSize: '0.75rem', opacity: 0.6, marginTop: '2px' }}>
                 פורסם ב: {new Date(post.createdAt?.toMillis?.() || post.createdAt).toLocaleString('he-IL', { dateStyle: 'short', timeStyle: 'short' })}

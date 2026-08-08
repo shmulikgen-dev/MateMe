@@ -32,6 +32,28 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+body.light-mode {
+  color-scheme: light;
+  
+  --bg-dark: #f8fafc;
+  --bg-gradient: radial-gradient(circle at top right, #ffffff, #e2e8f0);
+  
+  /* Primary colors can stay the same, but maybe tweaked for contrast */
+  --primary-color: #4f46e5;
+  --primary-glow: rgba(79, 70, 229, 0.2);
+  --secondary-color: #059669;
+  --secondary-glow: rgba(5, 150, 105, 0.2);
+  --accent-color: #e11d48;
+
+  /* Glassmorphism Tokens for light mode */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --glass-highlight: rgba(255, 255, 255, 0.9);
+  
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+}
+
 body {
   margin: 0;
   min-width: 320px;
