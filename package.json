@@ -14,6 +14,7 @@
     "@capacitor/core": "^8.4.2",
     "@supabase/supabase-js": "^2.110.7",
     "firebase": "^12.16.0",
+    "firebase-admin": "^14.2.0",
     "geofire-common": "^6.0.0",
     "i18next": "^26.3.6",
     "lucide-react": "^1.25.0",
