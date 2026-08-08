@@ -11,6 +11,7 @@ export default function JoinCommunity() {
   const [community, setCommunity] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     const fetchCommunity = async () => {
@@ -46,9 +47,11 @@ export default function JoinCommunity() {
       await setDoc(doc(db, 'users', user.uid), {
         myCommunities: arrayUnion(community.id)
       }, { merge: true });
-      
-      alert("הצטרפת לקהילה בהצלחה!");
-      navigate(`/community/${community.id}`);
+      setJoining(false);
+      setSuccess(true);
+      setTimeout(() => {
+        navigate(`/community/${community.id}`);
+      }, 1500);
     } catch (e: any) {
       console.error(e);
       alert(`שגיאה בהצטרפות לקהילה: ${e.message || 'שגיאה לא ידועה'}`);
@@ -76,12 +79,18 @@ export default function JoinCommunity() {
           </div>
         ) : (
           <button 
-            className="btn animate-pulse-glow" 
+            className={`btn ${success ? '' : 'animate-pulse-glow'}`} 
             onClick={handleJoin} 
-            disabled={joining}
-            style={{ background: 'var(--accent-color)', width: '100%', fontSize: '1.2rem', padding: '1rem' }}
+            disabled={joining || success}
+            style={{ 
+              background: success ? 'var(--secondary-color)' : 'var(--accent-color)', 
+              width: '100%', 
+              fontSize: '1.2rem', 
+              padding: '1rem',
+              transition: 'all 0.3s ease'
+            }}
           >
-            {joining ? 'מצטרף...' : 'הצטרף עכשיו'}
+            {success ? 'הצטרפת בהצלחה! מעביר...' : joining ? 'מצטרף...' : 'הצטרף עכשיו'}
           </button>
         )}
       </div>
