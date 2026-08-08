@@ -15,8 +15,7 @@ interface FeedProps {
 export default function Feed({ embedded = false, communityId, isManager = false }: FeedProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { posts, setPosts, loading, location } = useFeed(150, communityId);
-  const [visibleCount, setVisibleCount] = useState(10);
+  const { posts, setPosts, loading, location, loadMore, hasMore } = useFeed(150, communityId);
   const [bids, setBids] = useState<{[key: string]: {amount: string, text: string}}>({});
   const [reportModal, setReportModal] = useState<{isOpen: boolean, postId: string}>({isOpen: false, postId: ''});
   const [reportReason, setReportReason] = useState('');
@@ -185,7 +184,7 @@ export default function Feed({ embedded = false, communityId, isManager = false 
            (post.tags && post.tags.some((tag: string) => tag.toLowerCase().includes(q)));
   });
 
-  const displayedPosts = filteredPosts.slice(0, visibleCount);
+  const displayedPosts = filteredPosts;
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: embedded ? '0' : '1rem' }}>
@@ -398,13 +397,14 @@ export default function Feed({ embedded = false, communityId, isManager = false 
         </div>
       )})}
       
-      {filteredPosts.length > visibleCount && (
+      {hasMore && (
         <button 
           className="btn" 
-          onClick={() => setVisibleCount(prev => prev + 10)}
+          onClick={loadMore}
+          disabled={loading}
           style={{ width: '100%', marginTop: '1rem', background: 'var(--glass-bg)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)' }}
         >
-          {t('loadMorePosts', 'טען עוד פוסטים')}
+          {loading ? t('loading', 'טוען...') : t('loadMorePosts', 'טען עוד פוסטים')}
         </button>
       )}
 

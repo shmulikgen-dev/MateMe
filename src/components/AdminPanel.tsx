@@ -5,6 +5,7 @@ import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, serverTimestamp
 import { Shield, Trash2, ArrowLeft, MessageSquareWarning } from 'lucide-react';
 import { useAuth } from '../useAuth';
 import type { UserProfile } from '../useAuth';
+import AdminAnalytics from './AdminAnalytics';
 
 export default function AdminPanel() {
   const { profile, loading: authLoading } = useAuth();
@@ -21,7 +22,7 @@ export default function AdminPanel() {
   const [newCommunityDesc, setNewCommunityDesc] = useState('');
   const [newCommunityType, setNewCommunityType] = useState<'geographic' | 'thematic'>('geographic');
   const [managerUserId, setManagerUserId] = useState('');
-  const [activeTab, setActiveTab] = useState<'general' | 'communities'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'communities' | 'analytics'>('general');
   const [rejectModal, setRejectModal] = useState<{isOpen: boolean, request: any}>({isOpen: false, request: null});
   const [rejectReason, setRejectReason] = useState('הקהילה כבר קיימת במערכת');
   const REJECT_REASONS = [
@@ -316,7 +317,12 @@ export default function AdminPanel() {
       <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', marginBottom: '2rem' }}>
         <button className="btn" onClick={() => setActiveTab('general')} style={{ flex: 1, background: activeTab === 'general' ? 'var(--primary-color)' : 'rgba(0,0,0,0.2)' }}>General Overview</button>
         <button className="btn" onClick={() => setActiveTab('communities')} style={{ flex: 1, background: activeTab === 'communities' ? 'var(--primary-color)' : 'rgba(0,0,0,0.2)' }}>Communities Management</button>
+        <button className="btn" onClick={() => setActiveTab('analytics')} style={{ flex: 1, background: activeTab === 'analytics' ? 'var(--primary-color)' : 'rgba(0,0,0,0.2)' }}>Analytics</button>
       </div>
+
+      {activeTab === 'analytics' && (
+        <AdminAnalytics users={users} posts={posts} communities={communities} />
+      )}
 
       {activeTab === 'general' && (
         <>

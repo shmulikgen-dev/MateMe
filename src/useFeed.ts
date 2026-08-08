@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from './firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { geohashQueryBounds, distanceBetween } from 'geofire-common';
 import { useAuth } from './useAuth';
 
@@ -14,6 +14,8 @@ export function useFeed(radiusKm: number = 150, communityId?: string) {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [location, setLocation] = useState<Location | null>(null);
+  const [fetchLimit, setFetchLimit] = useState(15);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -46,7 +48,8 @@ export function useFeed(radiusKm: number = 150, communityId?: string) {
           collection(db, 'posts'),
           where('location.geohash', '>=', b[0]),
           where('location.geohash', '<=', b[1]),
-          where('status', 'in', ['active', 'tender'])
+          where('status', 'in', ['active', 'tender']),
+          limit(fetchLimit)
         );
         promises.push(getDocs(q));
       }
@@ -88,6 +91,9 @@ export function useFeed(radiusKm: number = 150, communityId?: string) {
         return dateB - dateA;
       });
       setPosts(matchingDocs);
+      
+      // If any of the geohash queries hit the limit, there might be more docs
+      setHasMore(snapshots.some(snap => snap.docs.length === fetchLimit));
     } catch (err) {
       console.error("Error fetching feed: ", err);
     }
@@ -97,8 +103,12 @@ export function useFeed(radiusKm: number = 150, communityId?: string) {
   useEffect(() => {
     fetchPosts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location, radiusKm, communityId]);
+  }, [location, radiusKm, communityId, fetchLimit]);
+
+  const loadMore = () => {
+    setFetchLimit(prev => prev + 15);
+  };
 
   // Exposing fetchPosts so it can be called manually if needed (e.g. after connection/bid)
-  return { posts, loading, location, setPosts, fetchPosts };
+  return { posts, loading, location, setPosts, fetchPosts, loadMore, hasMore };
 }
