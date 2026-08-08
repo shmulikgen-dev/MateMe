@@ -115,6 +115,40 @@ export default function PostView() {
     }
   };
 
+  const handleAcceptBid = async (resp: any) => {
+    if (!auth.currentUser || !post) return;
+    try {
+      // 1. Update response status to accepted
+      await updateDoc(doc(db, 'responses', resp.id), {
+        status: 'accepted'
+      });
+      
+      // 2. Create a Chat between post creator and responder
+      const chatRef = await addDoc(collection(db, 'chats'), {
+        postId: post.id,
+        communityId: post.communityId || null,
+        users: [auth.currentUser.uid, resp.responderId],
+        status: 'active',
+        createdAt: serverTimestamp()
+      });
+      
+      // 3. Update post status to resolved (or evaluating if they want to accept multiple, but usually resolved)
+      await updateDoc(doc(db, 'posts', post.id), {
+        status: 'evaluating'
+      });
+      
+      // 4. Navigate to chat
+      if (post.communityId) {
+        navigate(`/community/${post.communityId}/chat/${chatRef.id}`);
+      } else {
+        navigate(`/chat/${chatRef.id}`);
+      }
+    } catch (error) {
+      console.error("Error accepting bid:", error);
+      alert('אירעה שגיאה. נסה שוב.');
+    }
+  };
+
   const handleShare = async () => {
     if (!post) return;
     const url = window.location.href;
@@ -215,7 +249,7 @@ export default function PostView() {
                             </div>
                           )}
                           <div style={{ marginTop: '1rem', textAlign: 'left' }}>
-                            <button className="btn" style={{ fontSize: '0.8rem', padding: '0.4rem 1rem' }}>בחר ושוחח</button>
+                            <button className="btn" onClick={() => handleAcceptBid(resp)} style={{ fontSize: '0.8rem', padding: '0.4rem 1rem' }}>בחר ושוחח</button>
                           </div>
                         </div>
                       ))}

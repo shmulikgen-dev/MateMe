@@ -25,6 +25,7 @@ export default function ProfileSettings() {
   const [alias, setAlias] = useState('');
   const [city, setCity] = useState('');
   const [bio, setBio] = useState('');
+  const [interests, setInterests] = useState('');
   const [pushEnabled, setPushEnabled] = useState(false);
   const [subscribedCategories, setSubscribedCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -35,6 +36,7 @@ export default function ProfileSettings() {
       setAlias(profile.alias || '');
       setCity(profile.city || '');
       setBio(profile.bio || '');
+      setInterests(profile.interests || '');
       setPushEnabled(profile.pushEnabled || false);
       setSubscribedCategories(profile.subscribedCategories || []);
     }
@@ -75,6 +77,7 @@ export default function ProfileSettings() {
         alias,
         city,
         bio,
+        interests,
         pushEnabled,
         subscribedCategories
       });
@@ -125,6 +128,17 @@ export default function ProfileSettings() {
             onChange={(e) => setBio(e.target.value)} 
             placeholder={t('bioPlaceholder', 'כתוב כמה מילים על עצמך, במה אתה יכול לעזור...')}
             style={{ width: '100%', padding: '0.8rem', boxSizing: 'border-box', minHeight: '100px', borderRadius: '8px' }} 
+          />
+        </div>
+        
+        <div style={{ marginBottom: '2rem' }}>
+          <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.5rem' }}>{t('interests', 'תחומי עניין (מופרדים בפסיק)')}</label>
+          <input 
+            type="text" 
+            value={interests} 
+            onChange={(e) => setInterests(e.target.value)} 
+            placeholder={t('interestsPlaceholder', 'גינון, הייטק, בישול...')}
+            style={{ width: '100%', padding: '0.8rem', boxSizing: 'border-box', borderRadius: '8px' }} 
           />
         </div>
 
