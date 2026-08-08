@@ -25,6 +25,13 @@ export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState<'general' | 'communities' | 'analytics'>('general');
   const [rejectModal, setRejectModal] = useState<{isOpen: boolean, request: any}>({isOpen: false, request: null});
   const [rejectReason, setRejectReason] = useState('הקהילה כבר קיימת במערכת');
+  
+  // User Filtering States
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [userRoleFilter, setUserRoleFilter] = useState('all');
+  const [userCommunityFilter, setUserCommunityFilter] = useState('all');
+  const [userScoreFilter, setUserScoreFilter] = useState(0);
+  const [userInterestFilter, setUserInterestFilter] = useState('');
   const REJECT_REASONS = [
     'הקהילה כבר קיימת במערכת',
     'נושא הקהילה לא מתאים לאופי האפליקציה',
@@ -390,10 +397,67 @@ export default function AdminPanel() {
 
           <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
             {/* USERS TABLE */}
-            <div className="glass" style={{ flex: 1, minWidth: '300px', padding: '1rem', borderRadius: '12px' }}>
-              <h3>Users ({users.length})</h3>
+            <div className="glass" style={{ flex: 1, minWidth: '350px', padding: '1.5rem', borderRadius: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <h3 style={{ margin: 0 }}>Users ({users.length})</h3>
+              </div>
+
+              {/* FILTER CONTROLS */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem', background: 'rgba(0,0,0,0.1)', padding: '1rem', borderRadius: '8px' }}>
+                <input 
+                  type="text" 
+                  placeholder="Search by name or email..." 
+                  value={userSearchTerm}
+                  onChange={e => setUserSearchTerm(e.target.value)}
+                  style={{ flex: '1 1 200px', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--glass-border)' }}
+                />
+                <select 
+                  value={userRoleFilter} 
+                  onChange={e => setUserRoleFilter(e.target.value)}
+                  style={{ flex: '1 1 120px', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--glass-border)', background: 'var(--bg-dark)', color: 'var(--text-primary)' }}
+                >
+                  <option value="all">All Roles</option>
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <select 
+                  value={userCommunityFilter} 
+                  onChange={e => setUserCommunityFilter(e.target.value)}
+                  style={{ flex: '1 1 150px', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--glass-border)', background: 'var(--bg-dark)', color: 'var(--text-primary)' }}
+                >
+                  <option value="all">All Communities</option>
+                  {communities.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                <input 
+                  type="text" 
+                  placeholder="Filter by interests..." 
+                  value={userInterestFilter}
+                  onChange={e => setUserInterestFilter(e.target.value)}
+                  style={{ flex: '1 1 150px', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--glass-border)' }}
+                />
+                <div style={{ flex: '1 1 100%', display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.9rem' }}>
+                  <label style={{ whiteSpace: 'nowrap' }}>Min Trust Score: {userScoreFilter}</label>
+                  <input 
+                    type="range" 
+                    min="-10" max="100" 
+                    value={userScoreFilter} 
+                    onChange={e => setUserScoreFilter(Number(e.target.value))}
+                    style={{ flex: 1 }}
+                  />
+                </div>
+              </div>
+
               <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                {users.map(u => (
+                {users.filter(u => {
+                  const matchesSearch = (u.alias?.toLowerCase().includes(userSearchTerm.toLowerCase()) || u.email?.toLowerCase().includes(userSearchTerm.toLowerCase()));
+                  const matchesRole = userRoleFilter === 'all' || u.role === userRoleFilter || (!u.role && userRoleFilter === 'user');
+                  const matchesCommunity = userCommunityFilter === 'all' || u.myCommunities?.includes(userCommunityFilter);
+                  const matchesInterest = !userInterestFilter || (u.interests && u.interests.toLowerCase().includes(userInterestFilter.toLowerCase()));
+                  const matchesScore = (u.trustScore || 0) >= userScoreFilter;
+                  return matchesSearch && matchesRole && matchesCommunity && matchesScore && matchesInterest;
+                }).map(u => (
                   <div key={u.uid} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '0.8rem', marginBottom: '0.5rem', borderRadius: '8px' }}>
                     <div>
                       <strong>{u.alias}</strong> <span style={{fontSize: '0.8rem', opacity: 0.7}}>({u.role})</span>
