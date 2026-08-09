@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
-import { collection, doc, addDoc, serverTimestamp, updateDoc, deleteDoc, arrayUnion } from 'firebase/firestore';
+import { collection, doc, addDoc, setDoc, serverTimestamp, updateDoc, deleteDoc, arrayUnion } from 'firebase/firestore';
 import { MapPin, ArrowLeft, SearchX, Search, Share2, Flag, Hourglass, Paperclip, Trash2, XCircle } from 'lucide-react';
 import { useFeed } from '../useFeed';
 import UserBadge from './UserBadge';
@@ -123,7 +123,8 @@ export default function Feed({ embedded = false, communityId, isManager = false 
         return;
       }
       
-      await addDoc(collection(db, 'responses'), {
+      const responseId = `${postId}_${auth.currentUser.uid}`;
+      await setDoc(doc(db, 'responses', responseId), {
         postId,
         responderId: auth.currentUser.uid,
         status: 'pending',

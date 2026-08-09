@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
-import { collection, query, where, getDocs, getDoc, doc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { collection, query, where, getDocs, getDoc, doc, updateDoc, arrayUnion, orderBy, limit } from 'firebase/firestore';
 import { MessageCircle, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -16,7 +16,13 @@ export default function Inbox() {
     const fetchChats = async () => {
       if (!auth.currentUser) return;
       try {
-        const q = query(collection(db, 'chats'), where('users', 'array-contains', auth.currentUser.uid));
+        // We sort via orderBy to rely on Firestore indices and avoid pulling all chats, limiting to the last 20 for performance
+        const q = query(
+          collection(db, 'chats'), 
+          where('users', 'array-contains', auth.currentUser.uid),
+          orderBy('lastMessageTime', 'desc'),
+          limit(20)
+        );
         const snapshot = await getDocs(q);
         
         const chatsData = await Promise.all(snapshot.docs.map(async (chatDoc) => {

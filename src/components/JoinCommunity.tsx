@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
-import { doc, getDoc, updateDoc, arrayUnion, setDoc } from 'firebase/firestore';
+import { doc, getDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../useAuth';
 
 export default function JoinCommunity() {
@@ -39,22 +39,22 @@ export default function JoinCommunity() {
 
     setJoining(true);
     try {
-      // Add user to community members
-      await updateDoc(doc(db, 'communities', community.id), {
-        memberIds: arrayUnion(user.uid)
+      // Create a request instead of joining directly
+      await addDoc(collection(db, 'community_requests'), {
+        communityId: community.id,
+        requesterId: user.uid,
+        status: 'pending',
+        createdAt: serverTimestamp()
       });
-      // Add community to user profile using setDoc with merge to prevent missing doc errors
-      await setDoc(doc(db, 'users', user.uid), {
-        myCommunities: arrayUnion(community.id)
-      }, { merge: true });
+      
       setJoining(false);
       setSuccess(true);
       setTimeout(() => {
-        navigate(`/community/${community.id}`);
-      }, 1500);
+        navigate('/');
+      }, 2000);
     } catch (e: any) {
       console.error(e);
-      alert(`שגיאה בהצטרפות לקהילה: ${e.message || 'שגיאה לא ידועה'}`);
+      alert(`שגיאה בשליחת בקשת הצטרפות: ${e.message || 'שגיאה לא ידועה'}`);
       setJoining(false);
     }
   };
@@ -90,7 +90,7 @@ export default function JoinCommunity() {
               transition: 'all 0.3s ease'
             }}
           >
-            {success ? 'הצטרפת בהצלחה! מעביר...' : joining ? 'מצטרף...' : 'הצטרף עכשיו'}
+            {success ? 'בקשתך נשלחה למנהל הקהילה!' : joining ? 'שולח...' : 'שלח בקשת הצטרפות'}
           </button>
         )}
       </div>

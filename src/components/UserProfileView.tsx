@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, User, Award, MapPin, CheckCircle, MessageSquare } from 'lucide-react';
 import UserBadge from './UserBadge';
@@ -45,21 +45,14 @@ export default function UserProfileView() {
         // Fetch Transactions/Reviews
         const q = query(
           collection(db, 'transactions'),
-          where('userId', '==', userId)
-          // Removing orderBy to avoid requiring a composite index immediately.
-          // Will sort client-side.
+          where('userId', '==', userId),
+          orderBy('createdAt', 'desc'),
+          limit(10)
         );
         const transSnap = await getDocs(q);
         const transList: Transaction[] = [];
         transSnap.forEach(d => {
           transList.push({ id: d.id, ...d.data() } as Transaction);
-        });
-
-        // Sort client-side
-        transList.sort((a, b) => {
-          const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
-          const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
-          return timeB - timeA;
         });
 
         setTransactions(transList);

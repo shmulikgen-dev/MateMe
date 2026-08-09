@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
-import { doc, getDoc, collection, addDoc, updateDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc, setDoc, updateDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { ArrowLeft, Share2, Paperclip, MessageSquare } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import UserBadge from './UserBadge';
@@ -98,7 +98,8 @@ export default function PostView() {
         return;
       }
       
-      await addDoc(collection(db, 'responses'), {
+      const responseId = `${post.id}_${auth.currentUser.uid}`;
+      await setDoc(doc(db, 'responses', responseId), {
         postId: post.id,
         responderId: auth.currentUser.uid,
         status: 'pending',
