@@ -6,7 +6,7 @@ import { useAuth } from '../useAuth';
 import Feed from './Feed';
 import Chat from './Chat';
 import UserBadge from './UserBadge';
-import { Share2, Users, ArrowLeft, PlusCircle, UserMinus, LogOut } from 'lucide-react';
+import { Share2, Users, ArrowLeft, PlusCircle, LogOut, Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function CommunityView() {
@@ -70,22 +70,7 @@ export default function CommunityView() {
     }
   };
 
-  const handleRemoveMember = async (memberUid: string) => {
-    if (!window.confirm("האם להסיר משתמש זה מהקהילה?")) return;
-    try {
-      await updateDoc(doc(db, 'communities', id!), {
-        memberIds: arrayRemove(memberUid)
-      });
-      await updateDoc(doc(db, 'users', memberUid), {
-        myCommunities: arrayRemove(id!)
-      });
-      setMembers(members.filter(m => m.uid !== memberUid));
-      alert("משתמש הוסר בהצלחה");
-    } catch (e) {
-      console.error(e);
-      alert("שגיאה בהסרת משתמש");
-    }
-  };
+
 
   const handleLeaveCommunity = async () => {
     if (!user || !id) return;
