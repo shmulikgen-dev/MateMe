@@ -285,9 +285,11 @@ export default function Feed({ embedded = false, communityId, isManager = false 
               )}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-              <span style={{ fontSize: '0.8rem', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <MapPin size={12} /> {post.distance.toFixed(1)} {t('kmAway')}
-              </span>
+              {post.distance !== undefined && (
+                <span style={{ fontSize: '0.8rem', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <MapPin size={12} /> {post.distance.toFixed(1)} {t('kmAway')}
+                </span>
+              )}
               <button onClick={() => handleShare(post.id)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0 }}>
                 <Share2 size={16} />
               </button>
