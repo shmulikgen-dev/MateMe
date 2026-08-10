@@ -171,11 +171,6 @@ export default function CommunityView() {
                         <span style={{ fontWeight: 'bold' }}>{m.alias || 'Anonymous'}</span>
                         <UserBadge trustScore={m.trustScore || 0} isManager={community.managerIds?.includes(m.uid)} />
                       </div>
-                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        {m.createdAt && (Date.now() - m.createdAt < 7 * 24 * 60 * 60 * 1000) && (
-                          <span style={{ background: 'rgba(46, 204, 113, 0.2)', color: '#2ecc71', padding: '2px 6px', borderRadius: '8px', fontSize: '0.7rem' }}>🌱 חדש בשכונה</span>
-                        )}
-                      </div>
                     </div>
                   ))}
                 </div>

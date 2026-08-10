@@ -34,22 +34,22 @@ export default function UserBadge({ trustScore = 0, isManager = false, role, cla
 
   return (
     <span 
-      className={`user-badge ${className}`} 
-      title={badgeTitle}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
+      className={`user-badge ${className}`}
+      style={{ 
+        display: 'inline-flex', 
+        alignItems: 'center', 
         gap: '4px',
-        fontSize: '0.8rem',
-        padding: '2px 6px',
+        padding: '2px 8px',
         borderRadius: '12px',
-        background: `${badgeColor}22`, // 22 hex is ~13% opacity
-        color: badgeColor,
-        border: `1px solid ${badgeColor}44`,
-        marginLeft: '6px'
+        fontSize: '0.75rem',
+        fontWeight: 'bold',
+        backgroundColor: `${badgeColor}15`,
+        color: 'var(--text-primary)', // Much better contrast against any background
+        border: `1px solid ${badgeColor}`
       }}
+      title={badgeTitle}
     >
-      {badgeIcon} <span style={{ fontSize: '0.7rem' }}>{badgeTitle}</span>
+      {badgeIcon} <span>{badgeTitle}</span>
     </span>
   );
 }
