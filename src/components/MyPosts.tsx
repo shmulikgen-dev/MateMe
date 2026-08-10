@@ -344,6 +344,11 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
                   <strong>{t('category')}:</strong> {t(post.category)}
                 </div>
               )}
+              {post.communityId && post.communityId !== 'global' && (
+                <div style={{ marginBottom: '0.5rem', color: 'var(--accent-color)', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                  🔒 פורסם בקהילה סגורה
+                </div>
+              )}
               <p style={{ margin: '0 0 1rem 0' }}>{post.description}</p>
               
               {(post.targetDate || post.targetTime || post.availability || post.budget > 0) && (
