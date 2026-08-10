@@ -17,6 +17,7 @@ import PostView from './components/PostView';
 import MyCommunities from './components/MyCommunities';
 import JoinCommunity from './components/JoinCommunity';
 import CommunityView from './components/CommunityView';
+import ManagerDashboard from './components/ManagerDashboard';
 import OnboardingModal from './components/OnboardingModal';
 import AuthScreen from './components/AuthScreen';
 import './i18n';
@@ -221,6 +222,7 @@ function App() {
         <Route path="/admin" element={<AdminPanel />} />
         <Route path="/join/:id" element={<JoinCommunity />} />
         <Route path="/community/:id" element={<CommunityView />} />
+        <Route path="/community/:id/manager" element={<ManagerDashboard />} />
         <Route path="/community/:id/chat/:chatId" element={<CommunityView />} />
       </Routes>
     </>

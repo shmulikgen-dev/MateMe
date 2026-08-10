@@ -132,6 +132,15 @@ export default function CommunityView() {
             <button className="btn" onClick={handleShare} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
               <Share2 size={18} /> הזמן חברים
             </button>
+            {isManager && (
+              <button 
+                onClick={() => navigate(`/community/${id}/manager`)} 
+                style={{ background: '#10b981', border: '1px solid #059669', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', padding: '0.4rem 0.8rem', borderRadius: '8px', transition: 'all 0.2s' }}
+                title="ניהול קהילה"
+              >
+                <Shield size={14} /> לוח מנהלים
+              </button>
+            )}
             {isMember && (
               <button 
                 onClick={handleLeaveCommunity} 
@@ -162,24 +171,6 @@ export default function CommunityView() {
               <PlusCircle size={18} /> {t('createSupplyBtn')} בקהילה
             </button>
           </div>
-
-          {isManager && (
-            <div className="glass" style={{ padding: '1.5rem', marginBottom: '2rem', borderRadius: '12px', borderLeft: '4px solid #ef4444' }}>
-              <h3 style={{ margin: '0 0 1rem 0', color: '#ef4444' }}>כלי ניהול קהילה</h3>
-              <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                {members.map(m => (
-                  <div key={m.uid} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '0.5rem', marginBottom: '0.5rem', borderRadius: '4px' }}>
-                    <span>{m.alias || m.email || m.uid}</span>
-                    {m.uid !== user?.uid && (
-                      <button onClick={() => handleRemoveMember(m.uid)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}>
-                        <UserMinus size={16} />
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {showMembersModal && (
             <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '1rem' }}>
