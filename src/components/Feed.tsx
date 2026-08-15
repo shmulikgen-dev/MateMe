@@ -16,7 +16,7 @@ interface FeedProps {
 export default function Feed({ embedded = false, communityId, isManager = false }: FeedProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { posts, setPosts, loading, location, loadMore, hasMore } = useFeed(150, communityId);
+  const { posts, setPosts, loading, location, locationError, fallbackMode, setFallbackMode, loadMore, hasMore } = useFeed(150, communityId);
   const [bids, setBids] = useState<{[key: string]: {amount: string, text: string}}>({});
   const [reportModal, setReportModal] = useState<{isOpen: boolean, postId: string}>({isOpen: false, postId: ''});
   const [reportReason, setReportReason] = useState('');
@@ -176,7 +176,41 @@ export default function Feed({ embedded = false, communityId, isManager = false 
     }
   };
 
-  if (!location) return <div style={{ textAlign: 'center', padding: '2rem' }}>{t('lookingForLocation')}</div>;
+  if (locationError && !fallbackMode && !location && !communityId) {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    return (
+      <div style={{ textAlign: 'center', padding: '2rem', maxWidth: '400px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
+        <h3 style={{ color: '#ef4444', margin: 0 }}>שגיאת מיקום</h3>
+        <p style={{ margin: 0 }}>{locationError}</p>
+        
+        {isIOS && (
+          <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '12px', textAlign: 'right', fontSize: '0.9rem', width: '100%', border: '1px solid var(--glass-border)' }}>
+            <strong style={{ display: 'block', marginBottom: '0.5rem', color: '#f59e0b' }}>משתמשי אייפון (iOS):</strong>
+            כדי לאפשר גישה למיקום, אנא פעלו לפי השלבים:
+            <ol style={{ paddingInlineStart: '1.2rem', marginTop: '0.5rem', marginBottom: 0, display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <li>לחצו על סמל ה-<b>aA</b> (למעלה או למטה בשורת הכתובת של Safari).</li>
+              <li>בחרו ב-<b>הגדרות אתר אינטרנט</b> (Website Settings).</li>
+              <li>תחת מיקום (Location), שנו ל-<b>אפשר</b> (Allow).</li>
+              <li>רעננו את הדף.</li>
+            </ol>
+          </div>
+        )}
+        
+        <div style={{ background: 'var(--glass-bg)', padding: '1.5rem', borderRadius: '12px', width: '100%', border: '1px solid var(--glass-border)' }}>
+          <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem' }}>אם אינך רוצה או יכול לאפשר מיקום, באפשרותך לראות את כלל הפוסטים הפעילים (ללא מיון לפי קירבה גיאוגרפית).</p>
+          <button 
+            className="btn" 
+            style={{ width: '100%', background: 'var(--primary-color)' }}
+            onClick={() => setFallbackMode(true)}
+          >
+            הצג הכל (ללא מיקום)
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!location && !fallbackMode && !communityId) return <div style={{ textAlign: 'center', padding: '2rem' }}>{t('lookingForLocation')}</div>;
 
   const filteredPosts = posts.filter(post => {
     if (!searchQuery) return true;
@@ -285,9 +319,14 @@ export default function Feed({ embedded = false, communityId, isManager = false 
               )}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-              {post.distance !== undefined && (
+              {post.distance !== undefined && !fallbackMode && (
                 <span style={{ fontSize: '0.8rem', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <MapPin size={12} /> {post.distance.toFixed(1)} {t('kmAway')}
+                </span>
+              )}
+              {fallbackMode && (
+                <span style={{ fontSize: '0.8rem', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <MapPin size={12} /> מיקום לא ידוע
                 </span>
               )}
               <button onClick={() => handleShare(post.id)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0 }}>

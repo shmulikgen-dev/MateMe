@@ -17,6 +17,9 @@ export function useFeed(radiusKm: number = 150, communityId?: string) {
   const [fetchLimit, setFetchLimit] = useState(15);
   const [hasMore, setHasMore] = useState(true);
 
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [fallbackMode, setFallbackMode] = useState(false);
+
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -25,17 +28,25 @@ export function useFeed(radiusKm: number = 150, communityId?: string) {
             lat: position.coords.latitude,
             lng: position.coords.longitude
           });
+          setLocationError(null);
         },
         (error) => {
           console.error("Error getting location: ", error);
-        }
+          let errMsg = 'לא ניתן לקבל מיקום';
+          if (error.code === 1) errMsg = 'אין הרשאת גישה למיקום';
+          if (error.code === 3) errMsg = 'תם הזמן להמתנה למיקום (Timeout)';
+          setLocationError(errMsg);
+        },
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
       );
+    } else {
+      setLocationError('הדפדפן אינו תומך במיקום');
     }
   }, []);
 
   const fetchPosts = async () => {
-    // For global feed, we need location. For community feed, we don't strictly need it.
-    if (!location && !communityId) return;
+    // For global feed, we need location or fallbackMode.
+    if (!location && !communityId && !fallbackMode) return;
 
     setLoading(true);
     try {
@@ -62,11 +73,29 @@ export function useFeed(radiusKm: number = 150, communityId?: string) {
         
         setHasMore(snap.docs.length === fetchLimit);
       } else {
-        // GLOBAL FEED: Use geographical bounds.
         if (!location) {
-          setLoading(false);
-          return;
-        }
+          if (fallbackMode) {
+            // FALLBACK MODE: Fetch newest global posts without location
+            const q = query(
+              collection(db, 'posts'),
+              where('communityId', '==', 'global'),
+              where('status', 'in', ['active', 'tender']),
+              limit(fetchLimit * 2)
+            );
+            const snap = await getDocs(q);
+            for (const doc of snap.docs) {
+              const data = doc.data();
+              if (data.expiresAt && data.expiresAt < now) continue;
+              if (profile?.ignoredPosts?.includes(doc.id)) continue;
+              matchingDocs.push({ id: doc.id, ...data, distance: 0 }); // distance 0 as fallback
+            }
+            setHasMore(snap.docs.length >= fetchLimit);
+          } else {
+            setLoading(false);
+            return;
+          }
+        } else {
+
 
         const radiusInM = radiusKm * 1000;
         const center = [location.lat, location.lng] as [number, number];
@@ -106,7 +135,8 @@ export function useFeed(radiusKm: number = 150, communityId?: string) {
           }
         }
         setHasMore(snapshots.some(snap => snap.docs.length === fetchLimit));
-      }
+        } // close location else
+      } // close communityId else
 
       // Sort results
       matchingDocs.sort((a, b) => {
@@ -134,5 +164,5 @@ export function useFeed(radiusKm: number = 150, communityId?: string) {
   };
 
   // Exposing fetchPosts so it can be called manually if needed (e.g. after connection/bid)
-  return { posts, loading, location, setPosts, fetchPosts, loadMore, hasMore };
+  return { posts, setPosts, loading, location, locationError, fallbackMode, setFallbackMode, fetchPosts, loadMore, hasMore };
 }
