@@ -134,12 +134,17 @@ export function useAuth() {
   };
 
   const requestNotificationPermission = async () => {
-    if (!user || !profile) return;
+    if (!user || !profile) return false;
     try {
+      if (!('Notification' in window)) {
+        alert('הדפדפן שלך אינו תומך בהתראות פוש. (באייפון יש להוסיף את האתר למסך הבית קודם).');
+        return false;
+      }
+
       const { messaging } = await import('./firebase');
       if (!messaging) {
         console.log('Messaging not supported.');
-        return;
+        return false;
       }
       const { getToken } = await import('firebase/messaging');
       
@@ -152,10 +157,16 @@ export function useAuth() {
             pushEnabled: true
           });
           setProfile({ ...profile, fcmToken: currentToken, pushEnabled: true } as any);
+          return true;
         }
+      } else {
+        alert('לא ניתן אישור לקבלת התראות מהדפדפן.');
       }
+      return false;
     } catch (error) {
       console.error('Error requesting notification permission:', error);
+      alert('שגיאה בבקשת התראות. ודא שהוספת את האתר למסך הבית (Add to Home Screen).');
+      return false;
     }
   };
 

@@ -51,9 +51,14 @@ export default function ProfileSettings() {
   const handlePushToggle = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const isChecked = e.target.checked;
     if (isChecked) {
-      await requestNotificationPermission();
-      // It will update profile.pushEnabled, so the useEffect will catch it
-      setPushEnabled(true);
+      const success = await requestNotificationPermission();
+      if (success) {
+        setPushEnabled(true);
+      } else {
+        // Revert toggle
+        e.target.checked = false;
+        setPushEnabled(false);
+      }
     } else {
       setPushEnabled(false);
     }
