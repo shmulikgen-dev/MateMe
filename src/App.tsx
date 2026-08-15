@@ -53,7 +53,7 @@ function Home() {
 
   return (
     <div style={{ padding: '1rem', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
-      <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: '0.5rem' }}>
+      <div style={{ position: 'fixed', top: 15, right: 15, display: 'flex', gap: '0.5rem', zIndex: 1000 }}>
         <button onClick={toggleTheme} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '5px 10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
           {isLightMode ? <Moon size={20} /> : <Sun size={20} />}
         </button>
