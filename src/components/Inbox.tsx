@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
-import { collection, query, where, getDocs, getDoc, doc, updateDoc, arrayUnion, orderBy, limit } from 'firebase/firestore';
-import { MessageCircle, Trash2 } from 'lucide-react';
+import { collection, query, where, getDocs, getDoc, doc, updateDoc, arrayUnion, orderBy, limit, startAfter } from 'firebase/firestore';
+import { MessageCircle, Trash2, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function Inbox() {
@@ -10,65 +10,90 @@ export default function Inbox() {
   const { t } = useTranslation();
   const [activeChats, setActiveChats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [lastVisible, setLastVisible] = useState<any>(null);
+  const [hasMore, setHasMore] = useState(true);
   const [deletingChats, setDeletingChats] = useState<string[]>([]);
 
-  useEffect(() => {
-    const fetchChats = async () => {
-      if (!auth.currentUser) return;
-      try {
-        // We sort via orderBy to rely on Firestore indices and avoid pulling all chats, limiting to the last 20 for performance
-        const q = query(
+  const fetchChats = async (isInitial = true) => {
+    if (!auth.currentUser) return;
+    if (isInitial) setLoading(true);
+    else setLoadingMore(true);
+
+    try {
+      let q;
+      if (isInitial || !lastVisible) {
+        q = query(
           collection(db, 'chats'), 
           where('users', 'array-contains', auth.currentUser.uid),
           orderBy('lastMessageTime', 'desc'),
           limit(20)
         );
-        const snapshot = await getDocs(q);
-        
-        const chatsData = await Promise.all(snapshot.docs.map(async (chatDoc) => {
-          const data = chatDoc.data();
-          const usersList = data.users || data.participants || [];
-          const partnerId = usersList.find((id: string) => id !== auth.currentUser?.uid);
-          let partnerAlias = t('unknownUser', 'Unknown User');
-          
-          if (partnerId) {
-            const userSnap = await getDocs(query(collection(db, 'users'), where('uid', '==', partnerId)));
-            if (!userSnap.empty) {
-              partnerAlias = userSnap.docs[0].data().alias;
-            }
-          }
-          
-          let chatTopic = data.topic || '';
-          if (!chatTopic && data.postId) {
-            try {
-              const postDoc = await getDoc(doc(db, 'posts', data.postId));
-              if (postDoc.exists()) {
-                const pData = postDoc.data();
-                chatTopic = pData.description || pData.category || '';
-              }
-            } catch(e) {}
-          }
-          
-          return { id: chatDoc.id, partnerAlias, chatTopic, ...data } as any;
-        }));
-        
-        // Sort newest first
-        chatsData.sort((a, b) => {
-          const timeA = a.lastMessageTime?.toMillis() || a.createdAt?.toMillis() || 0;
-          const timeB = b.lastMessageTime?.toMillis() || b.createdAt?.toMillis() || 0;
-          return timeB - timeA;
-        });
-        
-        // Filter out chats the user deleted
-        const filteredChats = chatsData.filter(c => !c.deletedFor?.includes(auth.currentUser?.uid));
-        setActiveChats(filteredChats);
-      } catch (error) {
-        console.error("Error fetching chats", error);
+      } else {
+        q = query(
+          collection(db, 'chats'), 
+          where('users', 'array-contains', auth.currentUser.uid),
+          orderBy('lastMessageTime', 'desc'),
+          startAfter(lastVisible),
+          limit(20)
+        );
       }
-      setLoading(false);
-    };
 
-    fetchChats();
+      const snapshot = await getDocs(q);
+      
+      if (!snapshot.empty) {
+        setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
+      } else {
+        setHasMore(false);
+      }
+      
+      if (snapshot.docs.length < 20) {
+        setHasMore(false);
+      }
+      
+      const chatsData = await Promise.all(snapshot.docs.map(async (chatDoc) => {
+        const data = chatDoc.data();
+        const usersList = data.users || data.participants || [];
+        const partnerId = usersList.find((id: string) => id !== auth.currentUser?.uid);
+        let partnerAlias = t('unknownUser', 'Unknown User');
+        
+        if (partnerId) {
+          const userSnap = await getDocs(query(collection(db, 'users'), where('uid', '==', partnerId)));
+          if (!userSnap.empty) {
+            partnerAlias = userSnap.docs[0].data().alias;
+          }
+        }
+        
+        let chatTopic = data.topic || '';
+        if (!chatTopic && data.postId) {
+          try {
+            const postDoc = await getDoc(doc(db, 'posts', data.postId));
+            if (postDoc.exists()) {
+              const pData = postDoc.data();
+              chatTopic = pData.description || pData.category || '';
+            }
+          } catch(e) {}
+        }
+        
+        return { id: chatDoc.id, partnerAlias, chatTopic, ...data } as any;
+      }));
+      
+      const filteredChats = chatsData.filter(c => !c.deletedFor?.includes(auth.currentUser?.uid));
+      
+      if (isInitial) {
+        setActiveChats(filteredChats);
+      } else {
+        setActiveChats(prev => [...prev, ...filteredChats]);
+      }
+    } catch (error) {
+      console.error("Error fetching chats", error);
+    }
+    setLoading(false);
+    setLoadingMore(false);
+  };
+
+  useEffect(() => {
+    fetchChats(true);
   }, []);
 
   const handleDeleteChat = async (e: React.MouseEvent, chatId: string) => {
@@ -172,6 +197,19 @@ export default function Inbox() {
           </div>
         )})}
       </div>
+      
+      {hasMore && (
+        <div style={{ textAlign: 'center', marginTop: '1rem', paddingBottom: '2rem' }}>
+          <button 
+            className="btn" 
+            onClick={() => fetchChats(false)} 
+            disabled={loadingMore}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'var(--glass-bg)', color: 'var(--text-color)', border: '1px solid var(--glass-border)' }}
+          >
+            {loadingMore ? 'טוען...' : 'טען עוד הודעות'} <ChevronDown size={16} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

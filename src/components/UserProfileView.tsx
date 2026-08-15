@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
-import { doc, getDoc, collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, orderBy, limit, startAfter } from 'firebase/firestore';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, User, Award, MapPin, CheckCircle, MessageSquare } from 'lucide-react';
+import { ArrowLeft, User, Award, MapPin, CheckCircle, MessageSquare, ChevronDown } from 'lucide-react';
 import UserBadge from './UserBadge';
 
 interface PublicProfile {
@@ -29,40 +29,74 @@ export default function UserProfileView() {
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [lastVisible, setLastVisible] = useState<any>(null);
+  const [hasMore, setHasMore] = useState(true);
 
-  useEffect(() => {
+  const fetchProfileData = async (isInitial = true) => {
     if (!userId) return;
+    if (isInitial) setLoading(true);
+    else setLoadingMore(true);
 
-    const fetchProfileData = async () => {
-      setLoading(true);
-      try {
+    try {
+      if (isInitial) {
         // Fetch User
         const userDoc = await getDoc(doc(db, 'users', userId));
         if (userDoc.exists()) {
           setProfile(userDoc.data() as PublicProfile);
         }
+      }
 
-        // Fetch Transactions/Reviews
-        const q = query(
+      // Fetch Transactions/Reviews
+      let q;
+      if (isInitial || !lastVisible) {
+        q = query(
           collection(db, 'transactions'),
           where('userId', '==', userId),
           orderBy('createdAt', 'desc'),
           limit(10)
         );
-        const transSnap = await getDocs(q);
-        const transList: Transaction[] = [];
-        transSnap.forEach(d => {
-          transList.push({ id: d.id, ...d.data() } as Transaction);
-        });
-
-        setTransactions(transList);
-      } catch (err) {
-        console.error("Error fetching profile", err);
+      } else {
+        q = query(
+          collection(db, 'transactions'),
+          where('userId', '==', userId),
+          orderBy('createdAt', 'desc'),
+          startAfter(lastVisible),
+          limit(10)
+        );
       }
-      setLoading(false);
-    };
+      
+      const transSnap = await getDocs(q);
+      
+      if (!transSnap.empty) {
+        setLastVisible(transSnap.docs[transSnap.docs.length - 1]);
+      } else {
+        setHasMore(false);
+      }
+      
+      if (transSnap.docs.length < 10) {
+        setHasMore(false);
+      }
 
-    fetchProfileData();
+      const transList: Transaction[] = [];
+      transSnap.forEach(d => {
+        transList.push({ id: d.id, ...d.data() } as Transaction);
+      });
+
+      if (isInitial) {
+        setTransactions(transList);
+      } else {
+        setTransactions(prev => [...prev, ...transList]);
+      }
+    } catch (err) {
+      console.error("Error fetching profile", err);
+    }
+    setLoading(false);
+    setLoadingMore(false);
+  };
+
+  useEffect(() => {
+    fetchProfileData(true);
   }, [userId]);
 
   return (
@@ -138,6 +172,19 @@ export default function UserProfileView() {
                   )}
                 </div>
               ))}
+            </div>
+          )}
+          
+          {hasMore && transactions.length > 0 && (
+            <div style={{ textAlign: 'center', marginTop: '1.5rem', paddingBottom: '2rem' }}>
+              <button 
+                className="btn" 
+                onClick={() => fetchProfileData(false)} 
+                disabled={loadingMore}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'var(--glass-bg)', color: 'var(--text-color)', border: '1px solid var(--glass-border)' }}
+              >
+                {loadingMore ? 'טוען...' : 'טען עוד חוות דעת'} <ChevronDown size={16} />
+              </button>
             </div>
           )}
         </>
