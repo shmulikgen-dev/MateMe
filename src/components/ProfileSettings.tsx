@@ -20,7 +20,7 @@ const CATEGORIES = [
 export default function ProfileSettings() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { profile, user } = useAuth();
+  const { profile, user, requestNotificationPermission } = useAuth();
   
   const [alias, setAlias] = useState('');
   const [city, setCity] = useState('');
@@ -51,17 +51,9 @@ export default function ProfileSettings() {
   const handlePushToggle = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const isChecked = e.target.checked;
     if (isChecked) {
-      if ('Notification' in window) {
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-          setPushEnabled(true);
-        } else {
-          alert('Notification permission denied by browser.');
-          setPushEnabled(false);
-        }
-      } else {
-        alert('Push notifications are not supported by your browser.');
-      }
+      await requestNotificationPermission();
+      // It will update profile.pushEnabled, so the useEffect will catch it
+      setPushEnabled(true);
     } else {
       setPushEnabled(false);
     }

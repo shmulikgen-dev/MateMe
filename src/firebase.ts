@@ -25,3 +25,13 @@ export const auth = getAuth(app);
 
 // Initialize Cloud Storage and get a reference to the service
 export const storage = getStorage(app);
+
+// Initialize Firebase Cloud Messaging
+import { getMessaging, isSupported } from 'firebase/messaging';
+
+export let messaging: any = null;
+isSupported().then((supported) => {
+  if (supported) {
+    messaging = getMessaging(app);
+  }
+});

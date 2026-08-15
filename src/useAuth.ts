@@ -133,7 +133,33 @@ export function useAuth() {
     setProfile({ ...profile, hasCompletedOnboarding: true });
   };
 
+  const requestNotificationPermission = async () => {
+    if (!user || !profile) return;
+    try {
+      const { messaging } = await import('./firebase');
+      if (!messaging) {
+        console.log('Messaging not supported.');
+        return;
+      }
+      const { getToken } = await import('firebase/messaging');
+      
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        const currentToken = await getToken(messaging, { vapidKey: 'BHvDyJu6RngbsmJ7VhkynSdC_w6Ei7OxOSOwltEfBEKnFu6jNmARl2ssdnAKqpnaPSg0ruHLWCFlEIYWKg0L4pQ' });
+        if (currentToken) {
+          await updateDoc(doc(db, 'users', user.uid), {
+            fcmToken: currentToken,
+            pushEnabled: true
+          });
+          setProfile({ ...profile, fcmToken: currentToken, pushEnabled: true } as any);
+        }
+      }
+    } catch (error) {
+      console.error('Error requesting notification permission:', error);
+    }
+  };
+
   const logout = () => auth.signOut();
 
-  return { user, profile, loading, loginWithEmail, registerWithEmail, resetPassword, registerProfile, updateProfile, completeOnboarding, logout };
+  return { user, profile, loading, loginWithEmail, registerWithEmail, resetPassword, registerProfile, updateProfile, completeOnboarding, requestNotificationPermission, logout };
 }
