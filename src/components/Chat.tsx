@@ -183,7 +183,7 @@ export default function Chat() {
                   <Trash2 size={14} />
                 </button>
               )}
-              <div style={{ background: isMe ? 'var(--primary-color)' : 'rgba(255,255,255,0.1)', padding: '0.8rem 1rem', borderRadius: isMe ? '16px 16px 16px 4px' : '16px 16px 4px 16px', color: 'white' }}>
+              <div style={{ background: isMe ? 'var(--primary-color)' : 'var(--glass-bg)', border: isMe ? 'none' : '1px solid var(--glass-border)', padding: '0.8rem 1rem', borderRadius: isMe ? '16px 16px 16px 4px' : '16px 16px 4px 16px', color: isMe ? 'white' : 'var(--text-primary)' }}>
                 <div>{msg.text}</div>
                 <div style={{ fontSize: '0.7rem', opacity: 0.7, textAlign: isMe ? 'right' : 'left', marginTop: '4px' }}>
                   {formatMessageTime(msg.createdAt)}
