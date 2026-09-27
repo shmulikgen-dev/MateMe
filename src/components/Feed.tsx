@@ -16,7 +16,7 @@ interface FeedProps {
 export default function Feed({ embedded = false, communityId, isManager = false }: FeedProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { posts, setPosts, loading, location, locationError, fallbackMode, setFallbackMode, loadMore, hasMore } = useFeed(150, communityId);
+  const { posts, setPosts, loading, location, locationError, fallbackMode, setFallbackMode, loadMore, hasMore } = useFeed(30, communityId);
   const [bids, setBids] = useState<{[key: string]: {amount: string, text: string}}>({});
   const [reportModal, setReportModal] = useState<{isOpen: boolean, postId: string}>({isOpen: false, postId: ''});
   const [reportReason, setReportReason] = useState('');
