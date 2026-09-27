@@ -53,15 +53,15 @@ function Home() {
 
   return (
     <div style={{ padding: '1rem', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
-      <div style={{ position: 'fixed', top: 15, right: 15, display: 'flex', gap: '0.5rem', zIndex: 1000 }}>
-        <button onClick={toggleTheme} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '5px 10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+      <div style={{ position: 'fixed', top: 'calc(15px + env(safe-area-inset-top))', right: 15, display: 'flex', gap: '0.5rem', zIndex: 1000 }}>
+        <button onClick={toggleTheme} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '10px', minWidth: '44px', minHeight: '44px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {isLightMode ? <Moon size={20} /> : <Sun size={20} />}
         </button>
-        <button onClick={toggleLanguage} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '5px 10px', borderRadius: '8px', cursor: 'pointer' }}>
+        <button onClick={toggleLanguage} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '10px', minWidth: '44px', minHeight: '44px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {i18n.language === 'he' ? 'EN' : 'HE'}
         </button>
         {user && profile && (
-          <button onClick={() => navigate('/settings')} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '5px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={() => navigate('/settings')} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '10px', minWidth: '44px', minHeight: '44px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Settings size={20} />
           </button>
         )}

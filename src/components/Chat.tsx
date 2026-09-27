@@ -152,14 +152,14 @@ export default function Chat() {
   };
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', height: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ maxWidth: '600px', margin: '0 auto', height: '100dvh', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
-      <div className="glass" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', borderRadius: '0 0 16px 16px', zIndex: 10 }}>
+      <div className="glass" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', borderRadius: '0 0 16px 16px', zIndex: 10, paddingTop: 'calc(1rem + env(safe-area-inset-top))' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <button onClick={() => {
             if (communityId) navigate(`/community/${communityId}`);
             else navigate(-1);
-          }} style={{ background: 'transparent', border: 'none', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+          }} style={{ background: 'transparent', border: 'none', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '10px' }}>
             <ArrowLeft size={20} /> Back
           </button>
           <h3 style={{ margin: 0 }}>Chat with {partnerAlias}</h3>
@@ -173,14 +173,14 @@ export default function Chat() {
       </div>
 
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {messages.map((msg) => {
           const isMe = msg.senderId === auth.currentUser?.uid;
           return (
             <div key={msg.id} style={{ alignSelf: isMe ? 'flex-start' : 'flex-end', maxWidth: '75%', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               {isMe && (
-                <button onClick={() => handleDeleteMessage(msg.id)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '5px' }}>
-                  <Trash2 size={14} />
+                <button onClick={() => handleDeleteMessage(msg.id)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '10px', minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Trash2 size={16} />
                 </button>
               )}
               <div style={{ background: isMe ? 'var(--primary-color)' : 'var(--glass-bg)', border: isMe ? 'none' : '1px solid var(--glass-border)', padding: '0.8rem 1rem', borderRadius: isMe ? '16px 16px 16px 4px' : '16px 16px 4px 16px', color: isMe ? 'white' : 'var(--text-primary)' }}>
@@ -197,7 +197,7 @@ export default function Chat() {
 
       {/* Action Bar */}
       {!isCompleted ? (
-        <div style={{ padding: '1rem' }}>
+        <div style={{ padding: '1rem', paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
           {showReviewInput ? (
             <div className="glass animate-fade-in" style={{ padding: '1rem', marginBottom: '1rem', borderRadius: '12px' }}>
               <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', fontWeight: 'bold' }}>{t('leaveReview')} {partnerAlias}:</p>
@@ -229,7 +229,7 @@ export default function Chat() {
               placeholder="Type a message..."
               style={{ flex: 1, padding: '1rem', borderRadius: '24px' }}
             />
-            <button type="submit" className="btn" style={{ borderRadius: '50%', width: '50px', height: '50px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button type="submit" className="btn" style={{ borderRadius: '50%', width: '50px', height: '50px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '50px' }}>
               <Send size={20} />
             </button>
           </form>

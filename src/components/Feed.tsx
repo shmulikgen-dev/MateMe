@@ -329,14 +329,14 @@ export default function Feed({ embedded = false, communityId, isManager = false 
                   <MapPin size={12} /> מיקום לא ידוע
                 </span>
               )}
-              <button onClick={() => handleShare(post.id)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0 }}>
+              <button onClick={() => handleShare(post.id)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '10px', minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Share2 size={16} />
               </button>
-              <button onClick={() => setReportModal({isOpen: true, postId: post.id})} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0 }}>
+              <button onClick={() => setReportModal({isOpen: true, postId: post.id})} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '10px', minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Flag size={16} />
               </button>
               {(isManager || post.creatorId === auth.currentUser?.uid) && (
-                <button onClick={() => handleDeletePost(post.id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0 }}>
+                <button onClick={() => handleDeletePost(post.id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '10px', minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Trash2 size={16} />
                 </button>
               )}

@@ -71,7 +71,7 @@ export default function AuthScreen() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '1rem', background: 'var(--bg-color)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh', padding: '1rem', background: 'var(--bg-color)' }}>
       <div className="glass" style={{ width: '100%', maxWidth: '400px', padding: '2rem', borderRadius: '16px', position: 'relative', overflow: 'hidden' }}>
         
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>

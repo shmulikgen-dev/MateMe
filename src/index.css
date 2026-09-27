@@ -56,10 +56,14 @@ body.light-mode {
   --text-secondary: #475569;
 }
 
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
   margin: 0;
   min-width: 320px;
-  min-height: 100vh;
+  min-height: 100dvh;
   background: var(--bg-dark);
   background-image: var(--bg-gradient);
   background-attachment: fixed;
@@ -72,7 +76,9 @@ body {
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg-dark); }
 ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+@media (hover: hover) {
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+}
 
 /* Typography */
 h1, h2, h3 {
@@ -110,9 +116,11 @@ p {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
-.glass:hover {
-  border-color: var(--glass-highlight);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+@media (hover: hover) {
+  .glass:hover {
+    border-color: var(--glass-highlight);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+  }
 }
 
 /* Premium Buttons */
@@ -142,12 +150,13 @@ p {
   transition: opacity 0.2s;
 }
 
-.btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px var(--primary-glow);
+@media (hover: hover) {
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--primary-glow);
+  }
+  .btn:hover::after { opacity: 1; }
 }
-
-.btn:hover::after { opacity: 1; }
 
 .btn:active {
   transform: translateY(0);
@@ -163,6 +172,7 @@ p {
 /* Input Fields */
 textarea, input[type="text"], select {
   font-family: inherit;
+  font-size: 16px; /* Prevent iOS zoom */
   direction: rtl;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid var(--glass-border);
