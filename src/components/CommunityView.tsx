@@ -98,8 +98,8 @@ export default function CommunityView() {
   const isMember = profile?.myCommunities?.includes(id!);
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '1rem', paddingTop: 'calc(3.75rem + env(safe-area-inset-top))' }}>
-      <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginBottom: '1rem', fontWeight: 600 }}>
+    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0.5rem 1rem 1rem' }}>
+      <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginBottom: '0.85rem', fontWeight: 600 }}>
         <ArrowLeft size={20} /> {t('backToHome')}
       </button>
 

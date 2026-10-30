@@ -103,30 +103,30 @@ export default function NotificationBell() {
           }}
         />
       )}
-      <div style={{ position: 'fixed', top: 'calc(15px + env(safe-area-inset-top))', left: '15px', zIndex: 3000 }}>
+      <div style={{ position: 'relative', zIndex: 3000 }}>
         <button 
           onClick={() => setIsOpen(!isOpen)}
           style={{ 
             background: 'var(--glass-bg)', 
             border: '1px solid var(--glass-border)', 
-            borderRadius: '50%', 
-            width: '45px', 
-            height: '45px', 
+            borderRadius: '10px', 
+            width: '42px', 
+            height: '42px', 
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'center',
             cursor: 'pointer',
             position: 'relative',
             color: 'var(--text-primary)',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
           }}
         >
-          <Bell size={22} className={unreadCount > 0 ? "animate-pulse-glow" : ""} />
+          <Bell size={20} className={unreadCount > 0 ? "animate-pulse-glow" : ""} />
           {unreadCount > 0 && (
             <span style={{
               position: 'absolute',
-              top: '0',
-              right: '0',
+              top: '-4px',
+              right: '-4px',
               background: 'var(--primary-color)',
               color: 'white',
               borderRadius: '50%',
@@ -144,21 +144,23 @@ export default function NotificationBell() {
         </button>
 
         {isOpen && (
-          <div className="animate-fade-in" style={{
-            position: 'absolute',
-            top: '55px',
-            left: '0',
-            width: 'min(320px, calc(100vw - 30px))',
-            maxHeight: '420px',
+          <div style={{
+            position: 'fixed',
+            top: 'calc(66px + env(safe-area-inset-top))',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 'min(360px, calc(100vw - 24px))',
+            maxHeight: 'min(420px, 75dvh)',
             overflowY: 'auto',
             borderRadius: '16px',
             padding: '1rem',
-            background: 'var(--bg-color)',
+            background: 'var(--bg-dark)',
             border: '1px solid var(--primary-color)',
             boxShadow: '0 20px 50px rgba(0,0,0,0.65)',
             display: 'flex',
             flexDirection: 'column',
-            gap: '0.75rem'
+            gap: '0.75rem',
+            zIndex: 3001
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.6rem' }}>
               <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)' }}>{t('notifications')}</h3>

@@ -146,7 +146,7 @@ export default function MyCommunities() {
             <div 
               key={c.id} 
               className="glass" 
-              style={{ padding: '1.25rem 1.5rem', cursor: 'pointer', borderRadius: '14px', display: 'flex', alignItems: 'center', gap: '1.15rem', textAlign: 'start' }}
+              style={{ padding: '1rem 1.1rem', cursor: 'pointer', borderRadius: '14px', display: 'flex', alignItems: 'flex-start', gap: '0.9rem', textAlign: 'start' }}
               onClick={() => navigate(`/community/${c.id}`)}
             >
               {c.imageUrl && (
@@ -154,8 +154,8 @@ export default function MyCommunities() {
                   src={c.imageUrl}
                   alt={c.name}
                   style={{
-                    width: '68px',
-                    height: '68px',
+                    width: '60px',
+                    height: '60px',
                     borderRadius: '14px',
                     objectFit: 'cover',
                     border: '1.5px solid var(--primary-color)',
@@ -165,10 +165,11 @@ export default function MyCommunities() {
                 />
               )}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <h3 style={{ margin: '0 0 0.35rem 0', color: 'var(--primary-color)' }}>{c.name}</h3>
-                <p style={{ margin: 0, opacity: 0.85, fontSize: '0.9rem' }}>{c.description}</p>
-                <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', opacity: 0.65 }}>
+                <h3 style={{ margin: '0 0 0.3rem 0', color: 'var(--primary-color)', fontSize: '1.15rem', lineHeight: 1.25 }}>{c.name}</h3>
+                <p style={{ margin: 0, opacity: 0.85, fontSize: '0.88rem', lineHeight: 1.4 }}>{c.description}</p>
+                <div style={{ marginTop: '0.6rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center', fontSize: '0.8rem', opacity: 0.7 }}>
                   <span>{c.type === 'geographic' ? 'קהילה גאוגרפית' : 'קהילה נושאית'}</span>
+                  <span>•</span>
                   <span>{c.memberIds?.length || 0} חברים</span>
                 </div>
               </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Plus, Settings, Moon, Sun } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './useAuth';
@@ -22,12 +22,22 @@ import AuthScreen from './components/AuthScreen';
 import './i18n';
 import './App.css';
 
-function Home() {
-  const { t, i18n } = useTranslation();
-  const { user, profile, logout } = useAuth();
+function TopUtilityBar() {
+  const { i18n } = useTranslation();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLightMode, setIsLightMode] = useState(localStorage.getItem('theme') === 'light');
-  
+
+  useEffect(() => {
+    document.body.style.direction = i18n.language === 'he' ? 'rtl' : 'ltr';
+  }, [i18n.language]);
+
+  // Hide global utility bar inside full-screen chat view
+  if (location.pathname.startsWith('/chat/')) {
+    return null;
+  }
+
   const toggleTheme = () => {
     const newTheme = isLightMode ? 'dark' : 'light';
     setIsLightMode(!isLightMode);
@@ -38,48 +48,61 @@ function Home() {
       document.body.classList.remove('light-mode');
     }
   };
-  
+
   const toggleLanguage = () => {
     const newLang = i18n.language === 'he' ? 'en' : 'he';
     i18n.changeLanguage(newLang);
     document.body.style.direction = newLang === 'he' ? 'rtl' : 'ltr';
   };
-  
-  // Ensure correct direction on mount
-  useEffect(() => {
-    document.body.style.direction = i18n.language === 'he' ? 'rtl' : 'ltr';
-  }, [i18n.language]);
 
   return (
-    <div style={{ padding: '1rem', paddingTop: 'calc(4.25rem + env(safe-area-inset-top))', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
-      <div style={{ position: 'fixed', top: 'calc(15px + env(safe-area-inset-top))', right: 15, display: 'flex', gap: '0.5rem', zIndex: 1000 }}>
-        <button onClick={toggleTheme} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '10px', minWidth: '44px', minHeight: '44px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {isLightMode ? <Moon size={20} /> : <Sun size={20} />}
+    <div style={{
+      maxWidth: '800px',
+      margin: '0 auto',
+      padding: 'calc(0.65rem + env(safe-area-inset-top)) 1rem 0.25rem',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center'
+    }}>
+      <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center' }}>
+        <button onClick={toggleTheme} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', width: '42px', height: '42px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+          {isLightMode ? <Moon size={19} /> : <Sun size={19} />}
         </button>
-        <button onClick={toggleLanguage} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '10px', minWidth: '44px', minHeight: '44px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <button onClick={toggleLanguage} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', width: '42px', height: '42px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '0.85rem', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
           {i18n.language === 'he' ? 'EN' : 'HE'}
         </button>
         {user && profile && (
-          <button onClick={() => navigate('/settings')} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '10px', minWidth: '44px', minHeight: '44px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Settings size={20} />
+          <button onClick={() => navigate('/settings')} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', width: '42px', height: '42px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+            <Settings size={19} />
           </button>
         )}
       </div>
+      {user && profile && <NotificationBell />}
+    </div>
+  );
+}
 
+function Home() {
+  const { t } = useTranslation();
+  const { user, profile, logout } = useAuth();
+  const navigate = useNavigate();
+
+  return (
+    <div style={{ padding: '0.5rem 1rem 1rem', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
       {/* Compact Top Header with Top Action Button */}
-      <div className="glass" style={{ padding: '1.1rem 1.5rem', marginBottom: '1.25rem' }}>
+      <div className="glass" style={{ padding: '1.1rem 1.25rem', marginBottom: '1.25rem' }}>
         <div className="top-header-row">
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'start' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
               <h1 style={{ margin: 0, fontSize: '1.85rem', lineHeight: 1.1 }}>{t('appTitle')}</h1>
               {user && (
-                <div style={{ opacity: 0.9, fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(255,255,255,0.05)', padding: '0.25rem 0.65rem', borderRadius: '999px', border: '1px solid var(--glass-border)' }}>
+                <div style={{ opacity: 0.95, fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'var(--surface-subtle)', padding: '0.25rem 0.65rem', borderRadius: '999px', border: '1px solid var(--glass-border)' }}>
                   <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--secondary-color)', display: 'inline-block' }}></span>
                   {profile?.alias ? `${profile.alias} | ${t('trustScore')}: ${profile.trustScore}` : t('loggedInAs')}
                 </div>
               )}
             </div>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{t('appSubtitle')}</span>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>{t('appSubtitle')}</span>
           </div>
 
           {user && (
@@ -200,7 +223,7 @@ function App() {
   return (
     <>
       <OnboardingModal />
-      {user && profile && <NotificationBell />}
+      <TopUtilityBar />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/feed" element={<Feed />} />
