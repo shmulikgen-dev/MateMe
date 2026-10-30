@@ -80,17 +80,16 @@ export default function MyCommunities() {
   };
   const handleJoinCommunity = async (communityId: string) => {
     try {
-      // Add to user
-      await updateDoc(doc(db, 'users', user!.uid), {
-        myCommunities: arrayUnion(communityId)
-      });
-      // Add to community
+      // Add to community memberIds first, then to user's myCommunities
       await updateDoc(doc(db, 'communities', communityId), {
         memberIds: arrayUnion(user!.uid)
       });
-      alert('הצטרפת לקהילה בהצלחה!');
+      await updateDoc(doc(db, 'users', user!.uid), {
+        myCommunities: arrayUnion(communityId)
+      });
+      navigate(`/community/${communityId}`);
       window.location.reload();
-    } catch(e) {
+    } catch (e) {
       console.error(e);
       alert('שגיאה בהצטרפות לקהילה');
     }

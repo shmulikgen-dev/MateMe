@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
 import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
-import { Bell } from 'lucide-react';
+import { Bell, X } from 'lucide-react';
 
 interface Notification {
   id: string;
@@ -90,91 +90,117 @@ export default function NotificationBell() {
   };
 
   return (
-    <div style={{ position: 'fixed', top: 'calc(15px + env(safe-area-inset-top))', left: '15px', zIndex: 1000 }}>
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        style={{ 
-          background: 'var(--glass-bg)', 
-          border: '1px solid var(--glass-border)', 
-          borderRadius: '50%', 
-          width: '45px', 
-          height: '45px', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          cursor: 'pointer',
-          position: 'relative',
-          color: 'var(--text-primary)',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
-        }}
-      >
-        <Bell size={22} className={unreadCount > 0 ? "animate-pulse-glow" : ""} />
-        {unreadCount > 0 && (
-          <span style={{
-            position: 'absolute',
-            top: '0',
-            right: '0',
-            background: 'var(--primary-color)',
-            color: 'white',
-            borderRadius: '50%',
-            width: '18px',
-            height: '18px',
-            fontSize: '0.7rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 'bold'
-          }}>
-            {unreadCount}
-          </span>
-        )}
-      </button>
-
+    <>
       {isOpen && (
-        <div className="glass animate-fade-in" style={{
-          position: 'absolute',
-          top: '55px',
-          left: '0',
-          width: '280px',
-          maxHeight: '400px',
-          overflowY: 'auto',
-          borderRadius: '12px',
-          padding: '1rem',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.8rem'
-        }}>
-          <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1rem' }}>{t('notifications')}</h3>
-          
-          {notifications.length === 0 ? (
-            <div style={{ textAlign: 'center', opacity: 0.7, padding: '1rem 0' }}>
-              {t('noNotifications')}
-            </div>
-          ) : (
-            notifications.map(notif => (
-              <div 
-                key={notif.id}
-                onClick={() => handleNotificationClick(notif)}
-                style={{
-                  padding: '0.8rem',
-                  borderRadius: '8px',
-                  background: notif.read ? 'var(--surface-subtle)' : 'var(--badge-demand-bg)',
-                  color: notif.read ? 'var(--text-primary)' : 'var(--badge-demand-text)',
-                  border: '1px solid',
-                  borderColor: notif.read ? 'var(--glass-border)' : 'var(--primary-color)',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem',
-                  lineHeight: '1.4'
-                }}
-              >
-                {!notif.read && <span style={{ display: 'inline-block', width: '8px', height: '8px', background: 'var(--primary-color)', borderRadius: '50%', marginRight: '8px' }}></span>}
-                {notif.message}
-              </div>
-            ))
-          )}
-        </div>
+        <div
+          onClick={() => setIsOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.45)',
+            backdropFilter: 'blur(3px)',
+            zIndex: 2999
+          }}
+        />
       )}
-    </div>
+      <div style={{ position: 'fixed', top: 'calc(15px + env(safe-area-inset-top))', left: '15px', zIndex: 3000 }}>
+        <button 
+          onClick={() => setIsOpen(!isOpen)}
+          style={{ 
+            background: 'var(--glass-bg)', 
+            border: '1px solid var(--glass-border)', 
+            borderRadius: '50%', 
+            width: '45px', 
+            height: '45px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            cursor: 'pointer',
+            position: 'relative',
+            color: 'var(--text-primary)',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+          }}
+        >
+          <Bell size={22} className={unreadCount > 0 ? "animate-pulse-glow" : ""} />
+          {unreadCount > 0 && (
+            <span style={{
+              position: 'absolute',
+              top: '0',
+              right: '0',
+              background: 'var(--primary-color)',
+              color: 'white',
+              borderRadius: '50%',
+              width: '18px',
+              height: '18px',
+              fontSize: '0.7rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 'bold'
+            }}>
+              {unreadCount}
+            </span>
+          )}
+        </button>
+
+        {isOpen && (
+          <div className="animate-fade-in" style={{
+            position: 'absolute',
+            top: '55px',
+            left: '0',
+            width: 'min(320px, calc(100vw - 30px))',
+            maxHeight: '420px',
+            overflowY: 'auto',
+            borderRadius: '16px',
+            padding: '1rem',
+            background: 'var(--bg-color)',
+            border: '1px solid var(--primary-color)',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.65)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.75rem'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.6rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)' }}>{t('notifications')}</h3>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                style={{ background: 'var(--surface-subtle)', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              >
+                <X size={15} />
+              </button>
+            </div>
+            
+            {notifications.length === 0 ? (
+              <div style={{ textAlign: 'center', opacity: 0.7, padding: '1.25rem 0', color: 'var(--text-secondary)' }}>
+                {t('noNotifications')}
+              </div>
+            ) : (
+              notifications.map(notif => (
+                <div 
+                  key={notif.id}
+                  onClick={() => handleNotificationClick(notif)}
+                  style={{
+                    padding: '0.85rem',
+                    borderRadius: '10px',
+                    background: notif.read ? 'var(--surface-subtle)' : 'var(--badge-demand-bg)',
+                    color: notif.read ? 'var(--text-primary)' : 'var(--badge-demand-text)',
+                    border: '1px solid',
+                    borderColor: notif.read ? 'var(--glass-border)' : 'var(--primary-color)',
+                    cursor: 'pointer',
+                    fontSize: '0.88rem',
+                    lineHeight: '1.45',
+                    textAlign: 'start'
+                  }}
+                >
+                  {!notif.read && <span style={{ display: 'inline-block', width: '8px', height: '8px', background: 'var(--primary-color)', borderRadius: '50%', marginInlineEnd: '8px' }}></span>}
+                  {notif.message}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+    </>
   );
 }

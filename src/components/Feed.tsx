@@ -306,8 +306,8 @@ export default function Feed({ embedded = false, communityId, isManager = false 
         </button>
       )}
 
-      <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: embedded ? '1.5rem' : '0' }}>
-        <MapPin /> {t('localFeed')}
+      <h2 style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: embedded ? '0.5rem' : '0' }}>
+        <MapPin /> {communityId ? 'לוח מודעות קהילתי' : t('localFeed')}
       </h2>
       
       <div style={{ marginBottom: '0.85rem', display: 'flex', alignItems: 'center', background: 'var(--input-bg)', border: '1px solid var(--glass-border)', borderRadius: '12px', padding: '0.35rem 1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>

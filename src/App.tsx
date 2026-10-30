@@ -51,7 +51,7 @@ function Home() {
   }, [i18n.language]);
 
   return (
-    <div style={{ padding: '1rem', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
+    <div style={{ padding: '1rem', paddingTop: 'calc(4.25rem + env(safe-area-inset-top))', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
       <div style={{ position: 'fixed', top: 'calc(15px + env(safe-area-inset-top))', right: 15, display: 'flex', gap: '0.5rem', zIndex: 1000 }}>
         <button onClick={toggleTheme} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '10px', minWidth: '44px', minHeight: '44px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {isLightMode ? <Moon size={20} /> : <Sun size={20} />}
@@ -124,7 +124,6 @@ function Home() {
 }
 
 function App() {
-  const { t } = useTranslation();
   const { user, profile, loading, registerProfile } = useAuth();
   
   useEffect(() => {
@@ -156,30 +155,32 @@ function App() {
   if (user && !profile) {
     const isFormValid = formData.alias && formData.city && formData.tosAgreed;
     return (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <div className="glass animate-fade-in" style={{ padding: '2rem', maxWidth: '400px', margin: '0 auto', textAlign: 'left' }}>
-          <h2 style={{textAlign: 'center'}}>Complete Registration</h2>
-          <p style={{ opacity: 0.8, fontSize: '0.8rem', marginBottom: '1.5rem', textAlign: 'center' }}>Your personal details (Email, Phone) remain strictly private and will never be shared with other users.</p>
+      <div style={{ padding: '1.5rem 1rem', textAlign: 'center', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="glass animate-fade-in" style={{ padding: '1.75rem', maxWidth: '440px', width: '100%', margin: '0 auto', textAlign: 'start', borderRadius: '18px', border: '1px solid var(--primary-color)' }}>
+          <h2 style={{ textAlign: 'center', margin: '0 0 0.4rem 0' }}>שלב אחרון ומתחילים! 🎉</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.35rem', textAlign: 'center', lineHeight: 1.45 }}>
+            הפרטים האישיים שלך (אימייל וטלפון) נשארים חסויים לחלוטין ולעולם לא יוצגו למשתמשים אחרים. בקהילה תופיע רק בכינוי שתבחר.
+          </p>
           
-          <div style={{display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem'}}>
-            <input type="text" placeholder="Alias (Publicly Visible) *" value={formData.alias} onChange={e => setFormData({...formData, alias: e.target.value})} style={{width: '100%'}} />
-            <input type="tel" placeholder="Phone Number" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} style={{width: '100%'}} />
-            <input type="text" placeholder="City of Residence *" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} style={{width: '100%'}} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem', marginBottom: '1.5rem' }}>
+            <input type="text" placeholder="כינוי בקהילה (גלוי לחברים) *" value={formData.alias} onChange={e => setFormData({...formData, alias: e.target.value})} style={{ width: '100%', boxSizing: 'border-box' }} />
+            <input type="text" placeholder="עיר / יישוב מגורים *" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} style={{ width: '100%', boxSizing: 'border-box' }} />
+            <input type="tel" placeholder="מספר טלפון (פרטי - אופציונלי)" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} style={{ width: '100%', boxSizing: 'border-box' }} />
             
-            <div style={{display: 'flex', gap: '0.5rem', alignItems: 'center'}}>
-              <input type="number" placeholder="Age" value={formData.age} onChange={e => setFormData({...formData, age: e.target.value})} style={{width: '80px'}} />
-              <select value={formData.intent} onChange={e => setFormData({...formData, intent: e.target.value as any})} style={{flex: 1, padding: '0.8rem', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white'}}>
-                <option value="both">I Need & Offer Help</option>
-                <option value="demand">I Only Need Help</option>
-                <option value="supply">I Only Offer Help</option>
+            <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
+              <input type="number" placeholder="גיל" value={formData.age} onChange={e => setFormData({...formData, age: e.target.value})} style={{ width: '90px', boxSizing: 'border-box' }} />
+              <select value={formData.intent} onChange={e => setFormData({...formData, intent: e.target.value as any})} style={{ flex: 1, padding: '0.8rem', borderRadius: '10px', background: 'var(--input-bg)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)' }}>
+                <option value="both">אני גם מבקש וגם מציע עזרה</option>
+                <option value="demand">אני מחפש עזרה / פריטים</option>
+                <option value="supply">אני מציע עזרה / שירותים</option>
               </select>
             </div>
             
-            <input type="text" placeholder="Interests / Categories (e.g., Gardening, Tech)" value={formData.interests} onChange={e => setFormData({...formData, interests: e.target.value})} style={{width: '100%'}} />
+            <input type="text" placeholder="תחומי עניין (למשל: מילואים, יד שנייה, טכנולוגיה)" value={formData.interests} onChange={e => setFormData({...formData, interests: e.target.value})} style={{ width: '100%', boxSizing: 'border-box' }} />
             
-            <label style={{display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem'}}>
-              <input type="checkbox" checked={formData.tosAgreed} onChange={e => setFormData({...formData, tosAgreed: e.target.checked})} />
-              I agree to the Terms of Service. MateMe acts only as an intermediary.
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.55rem', fontSize: '0.82rem', color: 'var(--text-secondary)', cursor: 'pointer', marginTop: '0.25rem' }}>
+              <input type="checkbox" checked={formData.tosAgreed} onChange={e => setFormData({...formData, tosAgreed: e.target.checked})} style={{ width: '18px', height: '18px', marginTop: '2px', accentColor: 'var(--primary-color)' }} />
+              <span>אני מסכים/ה לתנאי השימוש. ידוע לי כי MateMe מהווה פלטפורמה לחיבור קהילתי בלבד.</span>
             </label>
           </div>
 
@@ -187,9 +188,9 @@ function App() {
             className="btn" 
             onClick={() => registerProfile({...formData, age: Number(formData.age)})}
             disabled={!isFormValid}
-            style={{ width: '100%' }}
+            style={{ width: '100%', padding: '0.9rem', fontSize: '1rem', fontWeight: 700 }}
           >
-            {t('save')}
+            שמור וכנס לקהילה 🚀
           </button>
         </div>
       </div>
