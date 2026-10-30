@@ -6,7 +6,7 @@ import { useAuth } from '../useAuth';
 import Feed from './Feed';
 import Chat from './Chat';
 import UserBadge from './UserBadge';
-import { Share2, Users, ArrowLeft, PlusCircle, LogOut, Shield } from 'lucide-react';
+import { Share2, Users, ArrowLeft, Plus, LogOut, Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function CommunityView() {
@@ -104,19 +104,49 @@ export default function CommunityView() {
       </button>
 
       <div className="glass" style={{ padding: '2rem', borderRadius: '12px', marginBottom: '2rem', border: '1px solid var(--primary-color)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <h1 style={{ margin: '0 0 0.5rem 0', color: 'var(--primary-color)' }}>{community.name}</h1>
-            <p style={{ margin: 0, opacity: 0.8 }}>{community.description}</p>
-            <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', opacity: 0.7, display: 'flex', gap: '1rem' }}>
-              <span onClick={() => setShowMembersModal(true)} style={{ cursor: 'pointer', textDecoration: 'underline' }}><Users size={14} style={{verticalAlign: 'middle', marginRight: '4px'}}/> {community.memberIds?.length || 0} חברים</span>
-              <span>סוג: {community.type === 'geographic' ? 'גאוגרפי' : 'נושאי'}</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1.25rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.15rem', flex: 1, minWidth: '240px' }}>
+            {community.imageUrl && (
+              <img
+                src={community.imageUrl}
+                alt={community.name}
+                style={{
+                  width: '84px',
+                  height: '84px',
+                  borderRadius: '16px',
+                  objectFit: 'cover',
+                  border: '2px solid var(--primary-color)',
+                  boxShadow: '0 4px 14px rgba(0,0,0,0.18)',
+                  flexShrink: 0
+                }}
+              />
+            )}
+            <div style={{ textAlign: 'start' }}>
+              <h1 style={{ margin: '0 0 0.4rem 0', color: 'var(--primary-color)', fontSize: '1.9rem' }}>{community.name}</h1>
+              <p style={{ margin: 0, opacity: 0.9, lineHeight: 1.5 }}>{community.description}</p>
+              <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', opacity: 0.75, display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                <span onClick={() => setShowMembersModal(true)} style={{ cursor: 'pointer', textDecoration: 'underline' }}>
+                  <Users size={14} style={{ verticalAlign: 'middle', marginLeft: '4px' }} /> {community.memberIds?.length || 0} חברים
+                </span>
+                <span>סוג: {community.type === 'geographic' ? 'גאוגרפי' : 'נושאי'}</span>
+              </div>
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', alignItems: 'flex-end' }}>
-            <button className="btn" onClick={handleShare} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <Share2 size={18} /> הזמן חברים
-            </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', alignItems: 'flex-end' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              {isMember && (
+                <button
+                  className="top-create-btn"
+                  onClick={() => navigate(`/create-post?communityId=${id}`)}
+                >
+                  <Plus size={18} strokeWidth={2.5} />
+                  <span>פרסום בקהילה</span>
+                </button>
+              )}
+              <button className="btn" onClick={handleShare} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', padding: '0.55rem 1rem', fontSize: '0.9rem' }}>
+                <Share2 size={16} /> הזמן חברים
+              </button>
+            </div>
             {isManager && (
               <button 
                 onClick={() => navigate(`/community/${id}/manager`)} 
@@ -148,14 +178,6 @@ export default function CommunityView() {
         </div>
       ) : (
         <>
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-            <button className="btn" onClick={() => navigate(`/create-demand?communityId=${id}`)} style={{ flex: 1, padding: '1rem', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
-              <PlusCircle size={18} /> {t('createDemandBtn')} בקהילה
-            </button>
-            <button className="btn" onClick={() => navigate(`/create-supply?communityId=${id}`)} style={{ flex: 1, padding: '1rem', background: 'var(--secondary-color)', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
-              <PlusCircle size={18} /> {t('createSupplyBtn')} בקהילה
-            </button>
-          </div>
 
           {showMembersModal && (
             <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '1rem', backdropFilter: 'blur(5px)' }}>

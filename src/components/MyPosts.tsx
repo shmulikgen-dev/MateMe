@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
 import { collection, query, where, getDocs, updateDoc, doc, addDoc, deleteDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { ArrowLeft, Inbox, CheckCircle, Trash2, Ghost, PackageOpen, Share2, Link, Flag, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Inbox, CheckCircle, Trash2, Ghost, PackageOpen, Share2, Link, Flag, RefreshCw, MessageCircle, XCircle, Award } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import AddToCalendarButton, { isCalendarEnabledForPost } from './AddToCalendarButton';
+import UserBadge from './UserBadge';
 
 interface MyPostsProps {
   embedded?: boolean;
@@ -160,17 +162,78 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
     
     const responsesWithAliases = await Promise.all(snapshot.docs.map(async (responseDoc) => {
       const data = responseDoc.data();
-      let alias = "Unknown";
+      let alias = t('unknownUser', 'חבר קהילה');
+      let trustScore = 0;
       try {
-        const userSnap = await getDocs(query(collection(db, 'users'), where('uid', '==', data.responderId)));
-        if (!userSnap.empty) {
-          alias = userSnap.docs[0].data().alias;
+        const directUserDoc = await getDoc(doc(db, 'users', data.responderId));
+        if (directUserDoc.exists()) {
+          alias = directUserDoc.data().alias || alias;
+          trustScore = directUserDoc.data().trustScore || 0;
+        } else {
+          const userSnap = await getDocs(query(collection(db, 'users'), where('uid', '==', data.responderId)));
+          if (!userSnap.empty) {
+            alias = userSnap.docs[0].data().alias || alias;
+            trustScore = userSnap.docs[0].data().trustScore || 0;
+          }
         }
       } catch (e) {}
-      return { id: responseDoc.id, ...data, alias };
+      return { id: responseDoc.id, ...data, alias, trustScore } as any;
     }));
+
+    // Sort: non-rejected first, then by combined community score (higher trustScore + lower bidAmount)
+    responsesWithAliases.sort((a, b) => {
+      if (a.status === 'rejected' && b.status !== 'rejected') return 1;
+      if (a.status !== 'rejected' && b.status === 'rejected') return -1;
+      const trustDiff = (b.trustScore || 0) - (a.trustScore || 0);
+      if (a.bidAmount && b.bidAmount && a.bidAmount !== b.bidAmount) {
+        return a.bidAmount - b.bidAmount;
+      }
+      return trustDiff;
+    });
     
     setActiveResponses(responsesWithAliases);
+  };
+
+  const handleOpenChatOnly = async (responderId: string, postId: string) => {
+    if (!auth.currentUser) return;
+    const post = myPosts.find((p: any) => p.id === postId);
+    const resolvedCommunityId = (post?.communityId && post.communityId !== 'global') ? post.communityId : null;
+
+    const chatRef = await addDoc(collection(db, 'chats'), {
+      postId,
+      communityId: resolvedCommunityId,
+      users: [auth.currentUser.uid, responderId],
+      status: 'active',
+      createdAt: serverTimestamp()
+    });
+
+    if (resolvedCommunityId) {
+      navigate(`/community/${resolvedCommunityId}/chat/${chatRef.id}`);
+    } else {
+      navigate(`/chat/${chatRef.id}`);
+    }
+  };
+
+  const handleRejectSingle = async (responseId: string, postId: string) => {
+    if (!auth.currentUser) return;
+    try {
+      await updateDoc(doc(db, 'responses', responseId), { status: 'rejected' });
+      const postRef = doc(db, 'posts', postId);
+      const postSnap = await getDoc(postRef);
+      if (postSnap.exists()) {
+        const currentCount = postSnap.data().responseCount || 0;
+        const newCount = Math.max(0, currentCount - 1);
+        const updates: any = { responseCount: newCount };
+        if (newCount < 3 && postSnap.data().status === 'evaluating') {
+          updates.status = 'active';
+        }
+        await updateDoc(postRef, updates);
+      }
+      setActiveResponses(prev => prev.map(r => r.id === responseId ? { ...r, status: 'rejected' } : r));
+      fetchMyPosts();
+    } catch (e) {
+      console.error('Error rejecting response:', e);
+    }
   };
 
   const handleAccept = async (responseId: string, responderId: string, postId: string) => {
@@ -351,30 +414,53 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
               )}
               <p style={{ margin: '0 0 1rem 0' }}>{post.description}</p>
               
-              {(post.targetDate || post.targetTime || post.availability || post.budget > 0) && (
-                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.8rem', borderRadius: '8px', marginBottom: '1.5rem', display: 'flex', gap: '1rem', fontSize: '0.85rem', flexWrap: 'wrap' }}>
-                  {post.targetDate && <div><strong>{t('date')}:</strong> {post.targetDate}</div>}
-                  {post.targetTime && <div><strong>{t('time')}:</strong> {post.targetTime}</div>}
-                  {post.availability && <div><strong>{t('availability')}:</strong> {post.availability}</div>}
-                  {post.budget > 0 && <div><strong>{post.type === 'supply' ? t('startingPrice') : t('budget')}:</strong> ₪{post.budget}</div>}
+              {(isCalendarEnabledForPost(post) || post.targetDate || post.targetTime || post.availability || post.budget > 0) && (
+                <div style={{ background: 'var(--surface-subtle)', padding: '0.8rem', borderRadius: '10px', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.85rem', fontSize: '0.85rem', flexWrap: 'wrap', border: '1px solid var(--glass-border)' }}>
+                  <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                    {post.targetDate && <div><strong>{t('date')}:</strong> {post.targetDate}</div>}
+                    {post.targetTime && <div><strong>{t('time')}:</strong> {post.targetTime}</div>}
+                    {post.availability && <div><strong>{t('availability')}:</strong> {post.availability}</div>}
+                    {post.budget > 0 && <div><strong>{post.type === 'supply' ? t('startingPrice') : t('budget')}:</strong> ₪{post.budget}</div>}
+                    {isCalendarEnabledForPost(post) && !post.targetDate && post.expiresAt && (
+                      <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                        <strong>בתוקף עד:</strong> {new Date(post.expiresAt).toLocaleString('he-IL', { dateStyle: 'short', timeStyle: 'short' })}
+                      </div>
+                    )}
+                  </div>
+                  <AddToCalendarButton post={post} />
                 </div>
               )}
 
-              <div style={{ marginTop: '1rem', padding: '1rem', background: 'var(--bg-dark)', borderRadius: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ marginTop: '1rem', padding: '1rem', background: 'var(--surface-subtle)', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
                   <p style={{ margin: 0, fontSize: '0.9rem' }}>
-                    <strong>{t('responsesCount', { count: post.responseCount || 0 })}</strong>
+                    <strong>
+                      {post.supplyType === 'event' || isCalendarEnabledForPost(post)
+                        ? `נרשמים לאירוע: ${post.responseCount || 0}`
+                        : t('responsesCount', { count: post.responseCount || 0 })}
+                    </strong>
                   </p>
-                  {(post.responseCount || 0) > 0 && post.status !== 'resolved' && (
-                    <button className="btn" onClick={() => viewResponses(post.id)} style={{ padding: '5px 15px', fontSize: '0.8rem' }}>
-                      {t('viewResponses')}
-                    </button>
-                  )}
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {post.type === 'demand' && !isCalendarEnabledForPost(post) && post.status === 'active' && (
+                      <button
+                        type="button"
+                        onClick={() => initiateTenderMode(post.id)}
+                        style={{ padding: '5px 12px', fontSize: '0.78rem', borderRadius: '8px', background: 'transparent', border: '1px solid var(--accent-color)', color: 'var(--accent-color)', cursor: 'pointer', fontWeight: 600 }}
+                      >
+                        🏆 העבר למכרז פתוח
+                      </button>
+                    )}
+                    {(post.responseCount || 0) > 0 && post.status !== 'resolved' && (
+                      <button className="btn" onClick={() => viewResponses(post.id)} style={{ padding: '5px 15px', fontSize: '0.8rem' }}>
+                        {post.supplyType === 'event' || isCalendarEnabledForPost(post) ? 'צפה בנרשמים' : t('viewResponses')}
+                      </button>
+                    )}
+                  </div>
                 </div>
                 
-                {post.status === 'evaluating' && (
+                {post.status === 'evaluating' && post.type === 'demand' && !isCalendarEnabledForPost(post) && (
                   <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: '#f59e0b' }}>
-                    {t('autoPaused')}
+                    התקבלו 3 פניות פעילות — ניתן לפתוח צ׳אט בירור, לבחור מועמד או לשחרר מקום כדי להחזיר את המודעה לפיד.
                   </p>
                 )}
               </div>
@@ -408,7 +494,7 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
                 transform: isDeleting ? 'scale(0.95)' : 'scale(1)',
                 transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
                 position: 'relative',
-                overflow: 'hidden',
+                overflow: isDeleting ? 'hidden' : 'visible',
                 borderLeft: isDeleting ? 'none' : `4px solid ${offer.status === 'rejected' ? 'var(--accent-color)' : 'var(--primary-color)'}` 
               }}>
               {isDeleting && (
@@ -459,10 +545,21 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
                   <p style={{ margin: '0.5rem 0', opacity: 0.8, fontSize: '0.9rem', fontStyle: 'italic' }}>
                     "{offer.post.description}"
                   </p>
-                  <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.6rem', borderRadius: '8px', display: 'flex', gap: '1rem', fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                     {offer.post.targetDate && <div><strong>{t('date')}:</strong> {offer.post.targetDate}</div>}
-                     {offer.post.budget > 0 && <div><strong>{t('budget')}:</strong> ₪{offer.post.budget}</div>}
-                  </div>
+                  {(isCalendarEnabledForPost(offer.post) || offer.post.targetDate || offer.post.targetTime || offer.post.budget > 0) && (
+                    <div style={{ background: 'var(--surface-subtle)', padding: '0.7rem', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.8rem', fontSize: '0.82rem', marginTop: '0.5rem', border: '1px solid var(--glass-border)' }}>
+                      <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                        {offer.post.targetDate && <div><strong>{t('date')}:</strong> {offer.post.targetDate}</div>}
+                        {offer.post.targetTime && <div><strong>{t('time')}:</strong> {offer.post.targetTime}</div>}
+                        {offer.post.budget > 0 && <div><strong>{t('budget')}:</strong> ₪{offer.post.budget}</div>}
+                        {isCalendarEnabledForPost(offer.post) && !offer.post.targetDate && offer.post.expiresAt && (
+                          <div style={{ color: 'var(--text-secondary)', fontSize: '0.78rem' }}>
+                            <strong>בתוקף עד:</strong> {new Date(offer.post.expiresAt).toLocaleString('he-IL', { dateStyle: 'short', timeStyle: 'short' })}
+                          </div>
+                        )}
+                      </div>
+                      <AddToCalendarButton post={offer.post} />
+                    </div>
+                  )}
                 </>
               ) : (
                 <p style={{ margin: '0.5rem 0', opacity: 0.5, fontStyle: 'italic' }}>Post deleted</p>
@@ -473,42 +570,160 @@ export default function MyPosts({ embedded = false }: MyPostsProps) {
       )}
 
       {/* RESPONSES VIEW */}
-      {selectedPostId && (
-        <div className="glass animate-fade-in" style={{ padding: '2rem' }}>
-          <button onClick={() => setSelectedPostId(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <ArrowLeft size={16} /> {t('backToPosts')}
-          </button>
-          <h3>{t('reviewConnections')}</h3>
-          <p style={{ opacity: 0.8, fontSize: '0.9rem', marginBottom: '1.5rem' }}>{t('chooseOneUser')}</p>
-          
-          {activeResponses.map(res => (
-            <div key={res.id} style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <strong>{res.alias}</strong>
-                {res.bidAmount && <div style={{ color: 'var(--accent-color)', fontWeight: 'bold' }}>{t('yourBid')}: ₪{res.bidAmount}</div>}
-                {res.bidText && <div style={{ fontSize: '0.85rem', fontStyle: 'italic', opacity: 0.9, marginTop: '2px' }}>"{res.bidText}"</div>}
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                  {t('statusLabel', { status: getTranslatedStatus(res.status) })}
-                </div>
-              </div>
-              {res.status !== 'rejected' && res.status !== 'accepted' && (
-                <button className="btn" onClick={() => handleAccept(res.id, res.responderId, res.postId)} style={{ padding: '8px 15px', display: 'flex', gap: '5px', alignItems: 'center' }}>
-                  <CheckCircle size={16} /> {t('acceptAndChat')}
-                </button>
-              )}
-            </div>
-          ))}
+      {selectedPostId && (() => {
+        const selectedPost = myPosts.find(p => p.id === selectedPostId);
+        const isEventOrSupply = Boolean(
+          selectedPost?.type === 'supply' ||
+          selectedPost?.supplyType === 'event' ||
+          isCalendarEnabledForPost(selectedPost)
+        );
+        const validBids = activeResponses.filter(r => r.status !== 'rejected' && r.bidAmount > 0);
+        const minBidAmount = validBids.length > 0 ? Math.min(...validBids.map(r => r.bidAmount)) : null;
+        const maxTrustScore = activeResponses.length > 0 ? Math.max(...activeResponses.filter(r => r.status !== 'rejected').map(r => r.trustScore || 0)) : 0;
 
-          {activeResponses.length >= 3 && !activeResponses.find(r => r.status === 'accepted') && (
-            <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid var(--glass-border)', textAlign: 'center' }}>
-              <p style={{fontSize: '0.9rem', marginBottom: '1rem'}}>{t('noneFitPerfectly')}</p>
-              <button className="btn" onClick={() => initiateTenderMode(selectedPostId)} style={{ background: 'transparent', border: '1px solid var(--accent-color)', color: 'var(--accent-color)', width: '100%' }}>
-                {t('initiateTender')}
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+        return (
+          <div className="glass animate-fade-in" style={{ padding: '1.5rem' }}>
+            <button onClick={() => setSelectedPostId(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <ArrowLeft size={16} /> {t('backToPosts')}
+            </button>
+            <h3 style={{ marginTop: 0 }}>
+              {isEventOrSupply ? 'נרשמים ומתעניינים באירוע / בשירות' : t('reviewConnections')}
+            </h3>
+            <p style={{ opacity: 0.85, fontSize: '0.88rem', marginBottom: '1.25rem' }}>
+              {isEventOrSupply
+                ? 'ניתן לפתוח צ׳אט עם כל אחד מהנרשמים מבלי לסגור את האירוע לשאר המשתתפים.'
+                : 'ניתן לפתוח צ׳אט בירור חופשי עם המועמדים, לשחרר מקום של פונה לא מתאים (להחזרת המודעה לפיד), או לבחור סופית.'}
+            </p>
+            
+            {activeResponses.map(res => {
+              const isBestPrice = !isEventOrSupply && minBidAmount !== null && res.bidAmount === minBidAmount && res.status !== 'rejected';
+              const isTopTrust = !isEventOrSupply && maxTrustScore >= 20 && res.trustScore === maxTrustScore && res.status !== 'rejected';
+
+              return (
+                <div
+                  key={res.id}
+                  style={{
+                    background: 'var(--surface-subtle)',
+                    border: isTopTrust ? '1px solid var(--secondary-color)' : '1px solid var(--glass-border)',
+                    padding: '1rem',
+                    borderRadius: '12px',
+                    marginBottom: '0.85rem',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '0.85rem',
+                    opacity: res.status === 'rejected' ? 0.55 : 1
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: '180px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                      <strong
+                        onClick={() => navigate(`/user/${res.responderId}`)}
+                        style={{ cursor: 'pointer', color: 'var(--primary-color)', textDecoration: 'underline', fontSize: '0.98rem' }}
+                      >
+                        {res.alias}
+                      </strong>
+                      <UserBadge trustScore={res.trustScore || 0} />
+                      {isTopTrust && (
+                        <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: '999px', background: 'rgba(16, 185, 129, 0.16)', color: 'var(--secondary-color)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                          <Award size={12} /> מומלץ קהילה
+                        </span>
+                      )}
+                      {isBestPrice && (
+                        <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: '999px', background: 'rgba(236, 72, 153, 0.15)', color: 'var(--accent-color)' }}>
+                          💰 ההצעה המשתלמת
+                        </span>
+                      )}
+                    </div>
+                    {res.bidAmount > 0 && (
+                      <div style={{ color: 'var(--accent-color)', fontWeight: 700, marginTop: '0.3rem', fontSize: '0.92rem' }}>
+                        {t('yourBid')}: ₪{res.bidAmount}
+                      </div>
+                    )}
+                    {res.bidText && (
+                      <div style={{ fontSize: '0.86rem', fontStyle: 'italic', opacity: 0.92, marginTop: '0.25rem', color: 'var(--text-primary)' }}>
+                        "{res.bidText}"
+                      </div>
+                    )}
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                      {t('statusLabel', { status: getTranslatedStatus(res.status) })}
+                    </div>
+                  </div>
+
+                  {res.status !== 'rejected' && res.status !== 'accepted' && (
+                    <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenChatOnly(res.responderId, res.postId)}
+                        style={{
+                          padding: '7px 12px',
+                          borderRadius: '9px',
+                          border: '1px solid var(--primary-color)',
+                          background: 'var(--badge-demand-bg)',
+                          color: 'var(--badge-demand-text)',
+                          fontWeight: 600,
+                          fontSize: '0.8rem',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        <MessageCircle size={15} /> {isEventOrSupply ? 'פתח צ׳אט' : 'צ׳אט בירור'}
+                      </button>
+
+                      {!isEventOrSupply && (
+                        <>
+                          <button
+                            type="button"
+                            className="btn"
+                            onClick={() => handleAccept(res.id, res.responderId, res.postId)}
+                            style={{ padding: '7px 12px', fontSize: '0.8rem', display: 'inline-flex', gap: '4px', alignItems: 'center', background: 'var(--secondary-color)' }}
+                          >
+                            <CheckCircle size={15} /> בחר סופית
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRejectSingle(res.id, res.postId)}
+                            title="דחה מועמד זה ושחרר מקום לפונה חדש"
+                            style={{
+                              padding: '7px 10px',
+                              borderRadius: '9px',
+                              border: '1px solid rgba(239, 68, 68, 0.35)',
+                              background: 'rgba(239, 68, 68, 0.1)',
+                              color: '#ef4444',
+                              fontWeight: 600,
+                              fontSize: '0.78rem',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '3px'
+                            }}
+                          >
+                            <XCircle size={14} /> שחרר מקום
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {!isEventOrSupply && selectedPost?.status !== 'tender' && !activeResponses.find(r => r.status === 'accepted') && (
+              <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid var(--glass-border)', textAlign: 'center' }}>
+                <p style={{ fontSize: '0.88rem', marginBottom: '0.8rem', color: 'var(--text-secondary)' }}>
+                  רוצה לפתוח את הבקשה להצעות מחיר מכל הקהילה ללא הגבלת 3 פונים?
+                </p>
+                <button className="btn" onClick={() => initiateTenderMode(selectedPostId)} style={{ background: 'transparent', border: '1px solid var(--accent-color)', color: 'var(--accent-color)', width: '100%' }}>
+                  🏆 {t('initiateTender')}
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {reportModal.isOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>

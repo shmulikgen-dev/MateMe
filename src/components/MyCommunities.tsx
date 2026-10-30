@@ -147,14 +147,31 @@ export default function MyCommunities() {
             <div 
               key={c.id} 
               className="glass" 
-              style={{ padding: '1.5rem', cursor: 'pointer', borderRadius: '12px' }}
+              style={{ padding: '1.25rem 1.5rem', cursor: 'pointer', borderRadius: '14px', display: 'flex', alignItems: 'center', gap: '1.15rem', textAlign: 'start' }}
               onClick={() => navigate(`/community/${c.id}`)}
             >
-              <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--primary-color)' }}>{c.name}</h3>
-              <p style={{ margin: 0, opacity: 0.8, fontSize: '0.9rem' }}>{c.description}</p>
-              <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', opacity: 0.6 }}>
-                <span>{c.type === 'geographic' ? 'קהילה גאוגרפית' : 'קהילה נושאית'}</span>
-                <span>{c.memberIds?.length || 0} חברים</span>
+              {c.imageUrl && (
+                <img
+                  src={c.imageUrl}
+                  alt={c.name}
+                  style={{
+                    width: '68px',
+                    height: '68px',
+                    borderRadius: '14px',
+                    objectFit: 'cover',
+                    border: '1.5px solid var(--primary-color)',
+                    flexShrink: 0,
+                    boxShadow: '0 4px 10px rgba(0,0,0,0.12)'
+                  }}
+                />
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h3 style={{ margin: '0 0 0.35rem 0', color: 'var(--primary-color)' }}>{c.name}</h3>
+                <p style={{ margin: 0, opacity: 0.85, fontSize: '0.9rem' }}>{c.description}</p>
+                <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', opacity: 0.65 }}>
+                  <span>{c.type === 'geographic' ? 'קהילה גאוגרפית' : 'קהילה נושאית'}</span>
+                  <span>{c.memberIds?.length || 0} חברים</span>
+                </div>
               </div>
             </div>
           ))}
@@ -166,19 +183,35 @@ export default function MyCommunities() {
           <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>קהילות מומלצות עבורך</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
             {suggestedCommunities.map(c => (
-              <div key={c.id} className="glass" style={{ padding: '1rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--secondary-color)' }}>{c.name}</h4>
-                  <p style={{ margin: 0, opacity: 0.8, fontSize: '0.9rem' }}>{c.description}</p>
-                  <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', opacity: 0.6 }}>
-                    {c.type === 'geographic' ? 'קהילה גאוגרפית' : 'קהילה נושאית'} • {c.memberIds?.length || 0} חברים
+              <div key={c.id} className="glass" style={{ padding: '1rem 1.25rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1, minWidth: '200px', textAlign: 'start' }}>
+                  {c.imageUrl && (
+                    <img
+                      src={c.imageUrl}
+                      alt={c.name}
+                      style={{
+                        width: '56px',
+                        height: '56px',
+                        borderRadius: '12px',
+                        objectFit: 'cover',
+                        border: '1.5px solid var(--secondary-color)',
+                        flexShrink: 0
+                      }}
+                    />
+                  )}
+                  <div>
+                    <h4 style={{ margin: '0 0 0.35rem 0', color: 'var(--secondary-color)' }}>{c.name}</h4>
+                    <p style={{ margin: 0, opacity: 0.85, fontSize: '0.9rem' }}>{c.description}</p>
+                    <div style={{ marginTop: '0.4rem', fontSize: '0.8rem', opacity: 0.65 }}>
+                      {c.type === 'geographic' ? 'קהילה גאוגרפית' : 'קהילה נושאית'} • {c.memberIds?.length || 0} חברים
+                    </div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                   <button className="btn" onClick={() => handleJoinCommunity(c.id)} style={{ background: 'var(--primary-color)', fontSize: '0.9rem', padding: '0.5rem 1rem' }}>
                     הצטרף
                   </button>
-                  <button className="btn" onClick={() => handleIgnoreCommunity(c.id)} style={{ background: 'transparent', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)', fontSize: '0.9rem', padding: '0.5rem 1rem' }}>
+                  <button onClick={() => handleIgnoreCommunity(c.id)} style={{ background: 'var(--surface-subtle)', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)', fontSize: '0.9rem', padding: '0.5rem 1rem', borderRadius: '10px', cursor: 'pointer' }}>
                     לא מעוניין
                   </button>
                 </div>

@@ -58,10 +58,27 @@ export default function Inbox() {
         let partnerAlias = t('unknownUser', 'Unknown User');
         
         if (partnerId) {
-          const userSnap = await getDocs(query(collection(db, 'users'), where('uid', '==', partnerId)));
-          if (!userSnap.empty) {
-            partnerAlias = userSnap.docs[0].data().alias;
-          }
+          try {
+            const directUserDoc = await getDoc(doc(db, 'users', partnerId));
+            if (directUserDoc.exists() && directUserDoc.data().alias) {
+              partnerAlias = directUserDoc.data().alias;
+            } else {
+              const userSnap = await getDocs(query(collection(db, 'users'), where('uid', '==', partnerId)));
+              if (!userSnap.empty) {
+                partnerAlias = userSnap.docs[0].data().alias;
+              }
+            }
+          } catch (e) {}
+        }
+
+        let communityName = '';
+        if (data.communityId && data.communityId !== 'global') {
+          try {
+            const commDoc = await getDoc(doc(db, 'communities', data.communityId));
+            if (commDoc.exists()) {
+              communityName = commDoc.data().name || '';
+            }
+          } catch (e) {}
         }
         
         let chatTopic = data.topic || '';
@@ -75,10 +92,12 @@ export default function Inbox() {
           } catch(e) {}
         }
         
-        return { id: chatDoc.id, partnerAlias, chatTopic, ...data } as any;
+        return { id: chatDoc.id, partnerAlias, chatTopic, communityName, ...data } as any;
       }));
       
-      const filteredChats = chatsData.filter(c => !c.deletedFor?.includes(auth.currentUser?.uid));
+      const filteredChats = chatsData.filter(
+        c => c.status !== 'completed' && !c.deletedFor?.includes(auth.currentUser?.uid)
+      );
       
       if (isInitial) {
         setActiveChats(filteredChats);
@@ -174,7 +193,9 @@ export default function Inbox() {
                   <span style={{ background: '#ef4444', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '10px' }}>{t('new', 'חדש')}</span>
                 )}
                 {(chat.communityId && chat.communityId !== 'global') && (
-                  <span style={{ background: 'var(--secondary-color)', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '10px' }}>קהילה</span>
+                  <span style={{ background: 'var(--secondary-color)', color: 'white', fontSize: '0.7rem', padding: '2px 8px', borderRadius: '10px' }}>
+                    {chat.communityName ? `קהילה: ${chat.communityName}` : 'קהילה'}
+                  </span>
                 )}
               </div>
               {chat.chatTopic && (
@@ -199,12 +220,11 @@ export default function Inbox() {
       </div>
       
       {hasMore && (
-        <div style={{ textAlign: 'center', marginTop: '1rem', paddingBottom: '2rem' }}>
+        <div style={{ textAlign: 'center', marginTop: '1rem', paddingBottom: '0.5rem' }}>
           <button 
-            className="btn" 
             onClick={() => fetchChats(false)} 
             disabled={loadingMore}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'var(--glass-bg)', color: 'var(--text-color)', border: '1px solid var(--glass-border)' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1.25rem', borderRadius: '10px', cursor: 'pointer', fontWeight: 600, background: 'var(--surface-subtle)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)' }}
           >
             {loadingMore ? 'טוען...' : 'טען עוד הודעות'} <ChevronDown size={16} />
           </button>

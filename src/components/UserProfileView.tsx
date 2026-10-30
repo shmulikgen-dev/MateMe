@@ -137,7 +137,7 @@ export default function UserProfileView() {
             )}
 
             {profile.interests && (
-              <div style={{ marginTop: '1.5rem', textAlign: 'left', background: 'rgba(0,0,0,0.1)', padding: '1rem', borderRadius: '12px' }}>
+              <div style={{ marginTop: '1.5rem', textAlign: 'left', background: 'var(--surface-subtle)', border: '1px solid var(--glass-border)', padding: '1rem', borderRadius: '12px' }}>
                 <strong style={{ opacity: 0.7 }}>Interests:</strong>
                 <p style={{ margin: '0.5rem 0 0 0' }}>{profile.interests}</p>
               </div>
@@ -165,7 +165,7 @@ export default function UserProfileView() {
                     </span>
                   </div>
                   {tData.review && (
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start', marginTop: '0.8rem', background: 'rgba(255,255,255,0.05)', padding: '0.8rem', borderRadius: '8px' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start', marginTop: '0.8rem', background: 'var(--surface-subtle)', border: '1px solid var(--glass-border)', padding: '0.8rem', borderRadius: '8px' }}>
                       <MessageSquare size={16} style={{ marginTop: '2px', opacity: 0.7 }} />
                       <p style={{ margin: 0, fontStyle: 'italic', opacity: 0.9 }}>"{tData.review}"</p>
                     </div>
@@ -178,10 +178,9 @@ export default function UserProfileView() {
           {hasMore && transactions.length > 0 && (
             <div style={{ textAlign: 'center', marginTop: '1.5rem', paddingBottom: '2rem' }}>
               <button 
-                className="btn" 
                 onClick={() => fetchProfileData(false)} 
                 disabled={loadingMore}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'var(--glass-bg)', color: 'var(--text-color)', border: '1px solid var(--glass-border)' }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.25rem', borderRadius: '10px', cursor: 'pointer', fontWeight: 600, background: 'var(--surface-subtle)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)' }}
               >
                 {loadingMore ? 'טוען...' : 'טען עוד חוות דעת'} <ChevronDown size={16} />
               </button>

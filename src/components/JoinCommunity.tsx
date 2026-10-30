@@ -67,6 +67,21 @@ export default function JoinCommunity() {
     <div style={{ maxWidth: '500px', margin: '2rem auto', padding: '1rem' }}>
       <div className="glass" style={{ padding: '2rem', textAlign: 'center', borderRadius: '12px' }}>
         <h2 style={{ color: 'var(--primary-color)', marginBottom: '1rem' }}>הזמנה להצטרף לקהילה</h2>
+        {community.imageUrl && (
+          <img
+            src={community.imageUrl}
+            alt={community.name}
+            style={{
+              width: '100px',
+              height: '100px',
+              borderRadius: '20px',
+              objectFit: 'cover',
+              border: '2px solid var(--primary-color)',
+              marginBottom: '1rem',
+              boxShadow: '0 6px 18px rgba(0,0,0,0.2)'
+            }}
+          />
+        )}
         <h1 style={{ fontSize: '2rem', margin: '0 0 1rem 0' }}>{community.name}</h1>
         <p style={{ opacity: 0.8, marginBottom: '2rem' }}>{community.description}</p>
         

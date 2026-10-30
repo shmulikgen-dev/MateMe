@@ -18,7 +18,7 @@ export default function CreateDemand() {
   const communityId = queryParams.get('communityId');
   
   const type = 'demand';
-  const [category, setCategory] = useState('catOther');
+  const [category, setCategory] = useState('catSecondHand');
   const [description, setDescription] = useState('');
   const [radius, setRadius] = useState(5);
   const [ttlHours, setTtlHours] = useState(24);
@@ -175,6 +175,7 @@ export default function CreateDemand() {
             onChange={(e) => setCategory(e.target.value)}
             style={{ width: '100%', padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', cursor: 'pointer' }}
           >
+            <option value="catSecondHand">{t('catSecondHand')}</option>
             <option value="catRepairs">{t('catRepairs')}</option>
             <option value="catDeliveries">{t('catDeliveries')}</option>
             <option value="catTeaching">{t('catTeaching')}</option>

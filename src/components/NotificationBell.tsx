@@ -47,6 +47,28 @@ export default function NotificationBell() {
     return () => unsubscribe();
   }, [auth.currentUser]);
 
+  // Listen for Foreground FCM Push Notifications so they also pop up when the tab is open
+  useEffect(() => {
+    let unsubMessaging: (() => void) | undefined;
+    import('firebase/messaging').then(async ({ onMessage }) => {
+      const { messaging } = await import('../firebase');
+      if (messaging) {
+        unsubMessaging = onMessage(messaging, (payload) => {
+          const title = payload.notification?.title || 'התראה חדשה מ-MateMe';
+          const body = payload.notification?.body || '';
+          if ('Notification' in window && Notification.permission === 'granted') {
+            navigator.serviceWorker?.ready
+              .then((reg) => reg.showNotification(title, { body, icon: '/vite.svg' }))
+              .catch(() => new window.Notification(title, { body }));
+          }
+        });
+      }
+    }).catch(() => {});
+    return () => {
+      if (unsubMessaging) unsubMessaging();
+    };
+  }, []);
+
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const handleNotificationClick = async (notif: Notification) => {
@@ -68,7 +90,7 @@ export default function NotificationBell() {
   };
 
   return (
-    <div style={{ position: 'fixed', top: '15px', left: '15px', zIndex: 1000 }}>
+    <div style={{ position: 'fixed', top: 'calc(15px + env(safe-area-inset-top))', left: '15px', zIndex: 1000 }}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
         style={{ 
@@ -137,9 +159,10 @@ export default function NotificationBell() {
                 style={{
                   padding: '0.8rem',
                   borderRadius: '8px',
-                  background: notif.read ? 'rgba(0,0,0,0.1)' : 'rgba(99, 102, 241, 0.15)',
+                  background: notif.read ? 'var(--surface-subtle)' : 'var(--badge-demand-bg)',
+                  color: notif.read ? 'var(--text-primary)' : 'var(--badge-demand-text)',
                   border: '1px solid',
-                  borderColor: notif.read ? 'transparent' : 'rgba(99, 102, 241, 0.3)',
+                  borderColor: notif.read ? 'var(--glass-border)' : 'var(--primary-color)',
                   cursor: 'pointer',
                   fontSize: '0.9rem',
                   lineHeight: '1.4'

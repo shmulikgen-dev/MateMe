@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
-import { Hand, Settings, Moon, Sun } from 'lucide-react';
+import { Plus, Settings, Moon, Sun } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './useAuth';
-import CreateDemand from './components/CreateDemand';
-import CreateSupply from './components/CreateSupply';
+import CreatePost from './components/CreatePost';
 import ProfileSettings from './components/ProfileSettings';
 import UserProfileView from './components/UserProfileView';
 import NotificationBell from './components/NotificationBell';
@@ -67,58 +66,50 @@ function Home() {
         )}
       </div>
 
-      <div className="glass" style={{ padding: '2rem', marginBottom: '1rem' }}>
-        <h1 style={{ marginBottom: '0.5rem' }}>{t('appTitle')}</h1>
-        <p style={{ margin: '0 0 2rem 0', fontSize: '1.1rem' }}>{t('appSubtitle')}</p>
-        
-        {user ? (
-          <div className="animate-fade-in">
-            <p style={{opacity: 0.7, fontSize: '0.9rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem'}}>
-              <span style={{width: 8, height: 8, borderRadius: '50%', background: 'var(--secondary-color)', display: 'inline-block'}}></span>
-              {profile?.alias ? `${profile.alias} | ${t('trustScore')}: ${profile.trustScore}` : t('loggedInAs')}
-            </p>
-            
-            {profile?.trustScore === 0 && (
-              <div className="animate-float" style={{ background: 'var(--primary-color)', color: 'white', padding: '0.8rem 1rem', borderRadius: '12px', marginBottom: '1.5rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.8rem', position: 'relative', border: '1px solid rgba(255,255,255,0.2)' }}>
-                <div style={{ background: 'rgba(255,255,255,0.2)', padding: '5px', borderRadius: '50%' }}><Hand size={18} /></div>
-                <div style={{ textAlign: 'left' }}>
-                  <strong>{t('welcomeTooltipTitle')} 👋</strong>
-                  <div style={{opacity: 0.9}}>{t('welcomeTooltipDesc')}</div>
+      {/* Compact Top Header with Top Action Button */}
+      <div className="glass" style={{ padding: '1.1rem 1.5rem', marginBottom: '1.25rem' }}>
+        <div className="top-header-row">
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'start' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <h1 style={{ margin: 0, fontSize: '1.85rem', lineHeight: 1.1 }}>{t('appTitle')}</h1>
+              {user && (
+                <div style={{ opacity: 0.9, fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(255,255,255,0.05)', padding: '0.25rem 0.65rem', borderRadius: '999px', border: '1px solid var(--glass-border)' }}>
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--secondary-color)', display: 'inline-block' }}></span>
+                  {profile?.alias ? `${profile.alias} | ${t('trustScore')}: ${profile.trustScore}` : t('loggedInAs')}
                 </div>
-                <div style={{ position: 'absolute', bottom: '-8px', left: '25%', width: '15px', height: '15px', background: 'var(--primary-color)', transform: 'rotate(45deg)', borderRight: '1px solid rgba(255,255,255,0.2)', borderBottom: '1px solid rgba(255,255,255,0.2)' }}></div>
-              </div>
-            )}
-
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginBottom: '1rem' }}>
-              <button className="btn" onClick={() => navigate('/create-demand')} style={{ flex: 1, padding: '1rem' }}>
-                {t('createDemandBtn')}
-              </button>
-              <button className="btn" onClick={() => navigate('/create-supply')} style={{ flex: 1, padding: '1rem', background: 'var(--secondary-color)', boxShadow: '0 4px 15px var(--secondary-glow)' }}>
-                {t('createSupplyBtn')}
-              </button>
+              )}
             </div>
-            
-            <Inbox />
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{t('appSubtitle')}</span>
           </div>
-        ) : null}
+
+          {user && (
+            <button
+              className="top-create-btn"
+              onClick={() => navigate('/create-post')}
+            >
+              <Plus size={18} strokeWidth={2.5} />
+              <span>פרסום חדש</span>
+            </button>
+          )}
+        </div>
+        {user && <Inbox />}
       </div>
 
       {user ? (
-        <div className="animate-fade-in" style={{ marginTop: '2rem' }}>
-          <div className="glass" style={{ padding: '1rem', marginBottom: '2rem' }}>
+        <div className="animate-fade-in">
+          <div className="glass" style={{ padding: '1rem', marginBottom: '1.5rem' }}>
             <MyCommunities />
           </div>
 
-          <div className="glass" style={{ padding: '1rem', marginBottom: '2rem' }}>
+          <div className="glass" style={{ padding: '1rem', marginBottom: '1.5rem' }}>
             <MyPosts embedded={true} />
           </div>
-          
-          <div className="glass" style={{ padding: '1rem' }}>
+
+          <div className="glass" style={{ padding: '1rem', marginBottom: '1.5rem' }}>
             <Feed embedded={true} />
           </div>
 
-
-          <div className="glass" style={{ padding: '2rem', marginTop: '2rem' }}>
+          <div className="glass" style={{ padding: '1.5rem', marginTop: '1.5rem' }}>
             {profile?.role === 'admin' && (
               <button onClick={() => navigate('/admin')} style={{ width: '100%', background: 'rgba(255,0,0,0.1)', border: '1px solid red', color: 'red', padding: '0.8rem', borderRadius: '8px', cursor: 'pointer', marginBottom: '1rem' }}>
                 Admin Panel
@@ -212,8 +203,9 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/feed" element={<Feed />} />
-        <Route path="/create-demand" element={<CreateDemand />} />
-        <Route path="/create-supply" element={<CreateSupply />} />
+        <Route path="/create-post" element={<CreatePost />} />
+        <Route path="/create-demand" element={<CreatePost initialIntent="demand" />} />
+        <Route path="/create-supply" element={<CreatePost initialIntent="supply" />} />
         <Route path="/dashboard" element={<MyPosts />} />
         <Route path="/settings" element={<ProfileSettings />} />
         <Route path="/user/:userId" element={<UserProfileView />} />

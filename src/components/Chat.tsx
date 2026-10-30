@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
-import { collection, query, where, getDocs, getDoc, doc, addDoc, onSnapshot, orderBy, serverTimestamp, updateDoc, increment, deleteDoc } from 'firebase/firestore';
-import { ArrowLeft, Send, Award, Trash2 } from 'lucide-react';
+import { collection, query, where, getDocs, getDoc, doc, addDoc, onSnapshot, orderBy, serverTimestamp, updateDoc, increment, deleteDoc, arrayUnion } from 'firebase/firestore';
+import { ArrowLeft, Send, Award, Trash2, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function Chat() {
@@ -16,6 +16,8 @@ export default function Chat() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [showReviewInput, setShowReviewInput] = useState(false);
   const [reviewText, setReviewText] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewSuccess, setReviewSuccess] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,11 +43,20 @@ export default function Chat() {
         const usersList = data.users || data.participants || [];
         const partnerId = usersList.find((id: string) => id !== auth.currentUser?.uid);
         if (partnerId) {
-          const userSnap = await getDocs(query(collection(db, 'users'), where('uid', '==', partnerId)));
-          if (!userSnap.empty) {
-            setPartnerAlias(userSnap.docs[0].data().alias);
-          } else {
-            setPartnerAlias('Unknown User');
+          try {
+            const directUserDoc = await getDoc(doc(db, 'users', partnerId));
+            if (directUserDoc.exists() && directUserDoc.data().alias) {
+              setPartnerAlias(directUserDoc.data().alias);
+            } else {
+              const userSnap = await getDocs(query(collection(db, 'users'), where('uid', '==', partnerId)));
+              if (!userSnap.empty) {
+                setPartnerAlias(userSnap.docs[0].data().alias);
+              } else {
+                setPartnerAlias(t('unknownUser', 'Unknown User'));
+              }
+            }
+          } catch (e) {
+            setPartnerAlias(t('unknownUser', 'Unknown User'));
           }
         }
       }
@@ -102,35 +113,63 @@ export default function Chat() {
   };
 
   const handleTransactionComplete = async () => {
-    if (!chatId || !auth.currentUser) return;
-    
-    // Mark chat as completed
-    await updateDoc(doc(db, 'chats', chatId), { status: 'completed' });
-    
-    // Reward Trust Points to both users and create transaction record
-    const chatDoc = await getDoc(doc(db, 'chats', chatId));
-    const users = chatDoc.data()?.users || [];
-    const partnerId = users.find((id: string) => id !== auth.currentUser?.uid);
-    
-    for (const uid of users) {
-      await updateDoc(doc(db, 'users', uid), {
-        trustScore: increment(10)
-      });
-    }
+    if (!chatId || !auth.currentUser || submittingReview || isCompleted) return;
+    setSubmittingReview(true);
 
-    if (partnerId) {
-      await addDoc(collection(db, 'transactions'), {
-        userId: partnerId,
-        reviewerId: auth.currentUser.uid,
-        points: 10,
-        review: reviewText,
-        createdAt: serverTimestamp()
-      });
-    }
+    try {
+      const currentUid = auth.currentUser.uid;
+      const chatDoc = await getDoc(doc(db, 'chats', chatId));
+      const users: string[] = chatDoc.data()?.users || chatDoc.data()?.participants || [];
+      const partnerId = users.find((id: string) => id !== currentUid);
 
-    setIsCompleted(true);
-    setShowReviewInput(false);
-    alert('Transaction Completed! Both users awarded +10 Trust Score.');
+      // Mark chat as completed and remove from current user's active inbox
+      await updateDoc(doc(db, 'chats', chatId), {
+        status: 'completed',
+        deletedFor: arrayUnion(currentUid)
+      });
+
+      // Reward Trust Points to both users
+      for (const uid of users) {
+        try {
+          await updateDoc(doc(db, 'users', uid), {
+            trustScore: increment(10)
+          });
+        } catch (err) {
+          console.warn('Could not increment trustScore for user', uid, err);
+        }
+      }
+
+      if (partnerId) {
+        try {
+          await addDoc(collection(db, 'transactions'), {
+            parties: [currentUid, partnerId],
+            userId: partnerId,
+            reviewerId: currentUid,
+            points: 10,
+            review: reviewText.trim(),
+            createdAt: serverTimestamp()
+          });
+        } catch (err) {
+          console.warn('Could not save transaction review', err);
+        }
+      }
+
+      setReviewSuccess(true);
+      setIsCompleted(true);
+      setShowReviewInput(false);
+
+      // Automatically close chat after showing visual feedback
+      setTimeout(() => {
+        if (communityId) {
+          navigate(`/community/${communityId}`);
+        } else {
+          navigate('/');
+        }
+      }, 1500);
+    } catch (err) {
+      console.error('Error completing transaction:', err);
+      setSubmittingReview(false);
+    }
   };
 
   const handleDeleteMessage = async (messageId: string) => {
@@ -209,14 +248,29 @@ export default function Chat() {
                 style={{ width: '100%', padding: '0.8rem', boxSizing: 'border-box', marginBottom: '0.8rem' }}
               />
               <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button className="btn" onClick={() => setShowReviewInput(false)} style={{ flex: 1, background: 'rgba(0,0,0,0.2)', boxShadow: 'none' }}>{t('cancel', 'Cancel')}</button>
-                <button className="btn" onClick={handleTransactionComplete} style={{ flex: 1, background: 'var(--secondary-color)' }}>{t('markCompletedWithReview')}</button>
+                <button
+                  type="button"
+                  disabled={submittingReview}
+                  onClick={() => setShowReviewInput(false)}
+                  style={{ flex: 1, padding: '0.75rem 1rem', borderRadius: '10px', background: 'var(--surface-subtle)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', fontWeight: 600, cursor: submittingReview ? 'not-allowed' : 'pointer' }}
+                >
+                  {t('cancel', 'ביטול')}
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={submittingReview}
+                  onClick={handleTransactionComplete}
+                  style={{ flex: 1, background: 'var(--secondary-color)', opacity: submittingReview ? 0.7 : 1, cursor: submittingReview ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
+                >
+                  {submittingReview ? 'שולח וסוגר צ׳אט...' : t('markCompletedWithReview')}
+                </button>
               </div>
             </div>
           ) : (
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
               <button className="btn" onClick={() => setShowReviewInput(true)} style={{ flex: 1, background: 'var(--secondary-color)', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
-                <Award size={18} /> Mark as Completed
+                <Award size={18} /> {t('markCompleted', 'סמן כהושלם')}
               </button>
             </div>
           )}
@@ -235,9 +289,16 @@ export default function Chat() {
           </form>
         </div>
       ) : (
-        <div className="glass" style={{ padding: '1rem', textAlign: 'center', margin: '1rem', color: 'var(--secondary-color)' }}>
-          <Award size={24} style={{ marginBottom: '0.5rem' }} />
-          <p style={{ margin: 0 }}>Transaction Completed & Points Awarded!</p>
+        <div className="glass animate-fade-in" style={{ padding: '1.25rem', textAlign: 'center', margin: '1rem', border: '1px solid rgba(16, 185, 129, 0.4)', background: 'rgba(16, 185, 129, 0.12)', color: 'var(--secondary-color)', borderRadius: '14px' }}>
+          <CheckCircle2 size={28} style={{ marginBottom: '0.4rem' }} />
+          <p style={{ margin: 0, fontWeight: 700, fontSize: '1rem' }}>
+            {reviewSuccess ? 'הביקורת נשלחה בהצלחה! (+10 נקודות אמון)' : 'העסקה הושלמה ונקודות האמון הוענקו!'}
+          </p>
+          {reviewSuccess && (
+            <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              סוגר את הצ׳אט ומחזיר למסך הראשי...
+            </p>
+          )}
         </div>
       )}
     </div>

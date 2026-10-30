@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { db } from './firebase';
+import { db, auth } from './firebase';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { geohashQueryBounds, distanceBetween } from 'geofire-common';
 import { useAuth } from './useAuth';
@@ -78,7 +78,6 @@ export function useFeed(radiusKm: number = 150, communityId?: string) {
             // FALLBACK MODE: Fetch newest global posts without location
             const q = query(
               collection(db, 'posts'),
-              where('communityId', '==', 'global'),
               where('status', 'in', ['active', 'tender']),
               limit(fetchLimit * 2)
             );
@@ -87,6 +86,7 @@ export function useFeed(radiusKm: number = 150, communityId?: string) {
               const data = doc.data();
               if (data.expiresAt && data.expiresAt < now) continue;
               if (profile?.ignoredPosts?.includes(doc.id)) continue;
+              if (data.communityId && data.communityId !== 'global') continue;
               matchingDocs.push({ id: doc.id, ...data, distance: 0 }); // distance 0 as fallback
             }
             setHasMore(snap.docs.length >= fetchLimit);
@@ -114,9 +114,11 @@ export function useFeed(radiusKm: number = 150, communityId?: string) {
         }
 
         const snapshots = await Promise.all(promises);
+        const seenIds = new Set<string>();
         
         for (const snap of snapshots) {
           for (const doc of snap.docs) {
+            if (seenIds.has(doc.id)) continue;
             const data = doc.data();
             
             if (data.expiresAt && data.expiresAt < now) continue;
@@ -129,7 +131,8 @@ export function useFeed(radiusKm: number = 150, communityId?: string) {
             const lng = data.location.lng;
             const distanceInKm = distanceBetween([lat, lng], center);
             
-            if (distanceInKm <= data.radius) {
+            if (distanceInKm <= data.radius || data.creatorId === auth.currentUser?.uid) {
+              seenIds.add(doc.id);
               matchingDocs.push({ id: doc.id, ...data, distance: distanceInKm });
             }
           }

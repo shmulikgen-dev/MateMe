@@ -5,6 +5,7 @@ import { doc, getDoc, collection, addDoc, setDoc, updateDoc, serverTimestamp, qu
 import { ArrowLeft, Share2, Paperclip, MessageSquare } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import UserBadge from './UserBadge';
+import AddToCalendarButton, { isCalendarEnabledForPost } from './AddToCalendarButton';
 
 export default function PostView() {
   const { id } = useParams();
@@ -62,6 +63,13 @@ export default function PostView() {
         navigate('/');
         return;
       }
+
+      const responseId = `${post.id}_${auth.currentUser.uid}`;
+      const existingResponseSnap = await getDoc(doc(db, 'responses', responseId));
+      if (existingResponseSnap.exists()) {
+        alert(t('alreadyResponded', 'כבר הגבת לפנייה זו ולא ניתן להגיב שוב.'));
+        return;
+      }
       
       const bidNum = isTender ? Number(bidAmount) : null;
       if (isTender && (!bidNum || bidNum <= 0)) {
@@ -69,12 +77,31 @@ export default function PostView() {
         return;
       }
 
+      await setDoc(doc(db, 'responses', responseId), {
+        postId: post.id,
+        responderId: auth.currentUser.uid,
+        status: 'pending',
+        bidAmount: bidNum,
+        bidText: bidText,
+        createdAt: serverTimestamp()
+      });
+
       const newCount = (post.responseCount || 0) + 1;
       const postRef = doc(db, 'posts', post.id);
       
+      const isRuleOf3 =
+        post.type === 'demand' &&
+        !isCalendarEnabledForPost(post) &&
+        post.supplyType !== 'event' &&
+        !post.isPopup &&
+        post.status !== 'tender';
+
       const updates: any = { responseCount: newCount };
-      if (post.type !== 'supply' && newCount >= 3 && !isTender) {
+      if (isRuleOf3 && newCount >= 3 && !isTender) {
         updates.status = 'evaluating';
+      }
+      if (bidNum && (!post.lowestBid || bidNum < post.lowestBid)) {
+        updates.lowestBid = bidNum;
       }
       
       await updateDoc(postRef, updates);
@@ -98,18 +125,8 @@ export default function PostView() {
         return;
       }
       
-      const responseId = `${post.id}_${auth.currentUser.uid}`;
-      await setDoc(doc(db, 'responses', responseId), {
-        postId: post.id,
-        responderId: auth.currentUser.uid,
-        status: 'pending',
-        bidAmount: bidNum,
-        bidText: bidText,
-        createdAt: serverTimestamp()
-      });
-      
       alert(isTender ? t('bidSubmitted') : t('connectionSent'));
-      setPost({...post, responseCount: newCount, status: (post.type !== 'supply' && newCount >= 3 && !isTender) ? 'evaluating' : post.status});
+      setPost({...post, responseCount: newCount, status: (isRuleOf3 && newCount >= 3 && !isTender) ? 'evaluating' : post.status});
     } catch (error) {
       console.error("Error connecting: ", error);
       alert(t('failedConnect', 'שגיאה ביצירת קשר'));
@@ -133,10 +150,12 @@ export default function PostView() {
         createdAt: serverTimestamp()
       });
       
-      // 3. Update post status to resolved (or evaluating if they want to accept multiple, but usually resolved)
-      await updateDoc(doc(db, 'posts', post.id), {
-        status: 'evaluating'
-      });
+      // 3. Only pause non-calendar, non-event Demand posts
+      if (post.type === 'demand' && !isCalendarEnabledForPost(post) && post.supplyType !== 'event' && post.status !== 'tender') {
+        await updateDoc(doc(db, 'posts', post.id), {
+          status: 'evaluating'
+        });
+      }
       
       // 4. Navigate to chat
       if (post.communityId) {
@@ -174,7 +193,7 @@ export default function PostView() {
 
       <div className="glass animate-fade-in" style={{ padding: '1.5rem', borderRight: `4px solid ${post.type === 'demand' ? 'var(--primary-color)' : 'var(--secondary-color)'}` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'center' }}>
-          <span style={{ fontWeight: '600', letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.75rem', padding: '4px 10px', borderRadius: '20px', background: post.type === 'demand' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(16, 185, 129, 0.15)', color: post.type === 'demand' ? '#a5b4fc' : '#6ee7b7' }}>
+          <span style={{ fontWeight: '700', letterSpacing: '0.5px', textTransform: 'uppercase', fontSize: '0.78rem', padding: '4px 12px', borderRadius: '20px', background: post.type === 'demand' ? 'var(--badge-demand-bg)' : 'var(--badge-supply-bg)', color: post.type === 'demand' ? 'var(--badge-demand-text)' : 'var(--badge-supply-text)' }}>
             {t(post.type)}
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
@@ -199,12 +218,20 @@ export default function PostView() {
         )}
         <p style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', lineHeight: '1.6' }}>{post.description}</p>
         
-        {(post.targetDate || post.targetTime || post.availability || post.budget > 0) && (
-          <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.8rem', borderRadius: '8px', marginBottom: '1.5rem', display: 'flex', gap: '1rem', fontSize: '0.85rem', flexWrap: 'wrap' }}>
-            {post.targetDate && <div><strong>{t('date')}:</strong> {post.targetDate}</div>}
-            {post.targetTime && <div><strong>{t('time')}:</strong> {post.targetTime}</div>}
-            {post.availability && <div><strong>{t('availability')}:</strong> {post.availability}</div>}
-            {post.budget > 0 && <div><strong>{post.type === 'supply' ? t('startingPrice') : t('budget')}:</strong> ₪{post.budget}</div>}
+        {(isCalendarEnabledForPost(post) || post.targetDate || post.targetTime || post.availability || post.budget > 0) && (
+          <div style={{ background: 'var(--surface-subtle)', padding: '0.8rem', borderRadius: '10px', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', fontSize: '0.85rem', flexWrap: 'wrap', border: '1px solid var(--glass-border)' }}>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              {post.targetDate && <div><strong>{t('date')}:</strong> {post.targetDate}</div>}
+              {post.targetTime && <div><strong>{t('time')}:</strong> {post.targetTime}</div>}
+              {post.availability && <div><strong>{t('availability')}:</strong> {post.availability}</div>}
+              {post.budget > 0 && <div><strong>{post.type === 'supply' ? t('startingPrice') : t('budget')}:</strong> ₪{post.budget}</div>}
+              {isCalendarEnabledForPost(post) && !post.targetDate && post.expiresAt && (
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                  <strong>בתוקף עד:</strong> {new Date(post.expiresAt).toLocaleString('he-IL', { dateStyle: 'short', timeStyle: 'short' })}
+                </div>
+              )}
+            </div>
+            <AddToCalendarButton post={post} />
           </div>
         )}
 
@@ -221,9 +248,9 @@ export default function PostView() {
         )}
 
         {post.status !== 'resolved' && (
-          <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', marginTop: '1.5rem' }}>
+          <div style={{ background: 'var(--surface-subtle)', padding: '1rem', borderRadius: '12px', marginTop: '1.5rem', border: '1px solid var(--glass-border)' }}>
             {post.creatorId === auth.currentUser?.uid ? (
-              <div style={{ textAlign: 'center', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.2)' }}>
+              <div style={{ textAlign: 'center', padding: '0.8rem', background: 'var(--glass-bg)', borderRadius: '8px', border: '1px dashed var(--glass-border)' }}>
                 <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{t('yourPost', 'זהו פוסט שאתה יצרת')}</span>
                 
                 {responses.length > 0 && (
