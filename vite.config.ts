@@ -7,23 +7,23 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'og-image.png'],
       manifest: {
-        name: 'עתיד החיבורים הקהילתיים',
-        short_name: 'חיבורים קהילתיים',
-        description: 'אפליקציה לניהול קהילות, סיוע ומכרזים',
-        theme_color: '#1a1b26',
-        background_color: '#1a1b26',
+        name: 'MateMe - פלטפורמת הקהילה המקומית',
+        short_name: 'MateMe',
+        description: 'פלטפורמת הקהילה המקומית המקשרת ביניכם באנונימיות מלאה.',
+        theme_color: '#1e3a8a',
+        background_color: '#0a0a0f',
         display: 'standalone',
         orientation: 'portrait',
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: '/pwa-192x192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'pwa-512x512.png',
+            src: '/pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
