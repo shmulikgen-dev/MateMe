@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Rubik:wght@300;400;500;600;700&display=swap');
 
 :root {
   font-family: 'Outfit', system-ui, -apple-system, sans-serif;
@@ -661,6 +661,257 @@ body.light-mode .intent-pill:not(.active) {
   font-weight: 400;
   line-height: 1.3;
   color: rgba(255, 255, 255, 0.88);
+}
+
+/* =====================================================================
+   SOFT DESIGN STYLE ("רך ומינימליסטי")
+   Fresh, young, minimal & calm. Activated by body.theme-soft.
+   Works together with body.light-mode for day / night.
+   ===================================================================== */
+
+/* ---- Night (default for soft) ---- */
+body.theme-soft {
+  font-family: 'Rubik', 'Outfit', system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+
+  --bg-dark: #131416;
+  --bg-gradient: none;
+
+  --primary-color: #7cc4b4;      /* soft sage-mint */
+  --primary-glow: rgba(124, 196, 180, 0.18);
+  --secondary-color: #f2b38f;    /* soft peach */
+  --secondary-glow: rgba(242, 179, 143, 0.18);
+  --accent-color: #ef8a8a;
+
+  --glass-bg: #1b1d20;
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-highlight: rgba(255, 255, 255, 0.1);
+  --surface-subtle: rgba(255, 255, 255, 0.035);
+  --input-bg: #202226;
+
+  --badge-demand-bg: rgba(124, 196, 180, 0.12);
+  --badge-demand-text: #9fd6ca;
+  --badge-supply-bg: rgba(242, 179, 143, 0.12);
+  --badge-supply-text: #f5c4a8;
+
+  --text-primary: #ececea;
+  --text-secondary: #9a9ea6;
+  --text-color: #ececea;
+
+  --soft-btn-text: #10201c;
+  --soft-shadow: 0 1px 2px rgba(0, 0, 0, 0.25), 0 6px 20px rgba(0, 0, 0, 0.18);
+}
+
+/* ---- Day ---- */
+body.theme-soft.light-mode {
+  color-scheme: light;
+
+  --bg-dark: #f6f5f1;            /* warm paper */
+  --bg-gradient: none;
+
+  --primary-color: #3f8f7f;      /* sage teal */
+  --primary-glow: rgba(63, 143, 127, 0.14);
+  --secondary-color: #d9875c;    /* terracotta peach */
+  --secondary-glow: rgba(217, 135, 92, 0.14);
+  --accent-color: #d45b5b;
+
+  --glass-bg: #ffffff;
+  --glass-border: rgba(20, 24, 28, 0.07);
+  --glass-highlight: rgba(20, 24, 28, 0.12);
+  --surface-subtle: #f3f2ee;
+  --input-bg: #ffffff;
+
+  --badge-demand-bg: #e6f2ef;
+  --badge-demand-text: #2d6b5f;
+  --badge-supply-bg: #fbeee6;
+  --badge-supply-text: #9a5530;
+
+  --text-primary: #1f2328;
+  --text-secondary: #6b7079;
+  --text-color: #1f2328;
+
+  --soft-btn-text: #ffffff;
+  --soft-shadow: 0 1px 2px rgba(20, 24, 28, 0.04), 0 6px 18px rgba(20, 24, 28, 0.05);
+}
+
+body.theme-soft {
+  background: var(--bg-dark);
+  background-image: none;
+}
+
+/* Typography – calm, no gradients */
+body.theme-soft h1,
+body.theme-soft.light-mode h1 {
+  background: none;
+  -webkit-text-fill-color: initial;
+  color: var(--text-primary);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+body.theme-soft h2,
+body.theme-soft h3 {
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+/* Cards – flat, airy, gentle shadow */
+body.theme-soft .glass,
+body.theme-soft.light-mode .glass {
+  background: var(--glass-bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  box-shadow: var(--soft-shadow);
+}
+
+@media (hover: hover) {
+  body.theme-soft .glass:hover {
+    border-color: var(--glass-highlight);
+    box-shadow: var(--soft-shadow);
+  }
+}
+
+/* Buttons – solid, quiet, no glow */
+body.theme-soft .btn,
+body.theme-soft.light-mode .btn {
+  background-color: var(--primary-color);
+  color: var(--soft-btn-text);
+  border-radius: 12px;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+body.theme-soft .btn::after { display: none; }
+
+@media (hover: hover) {
+  body.theme-soft .btn:hover {
+    transform: none;
+    box-shadow: none;
+    filter: brightness(1.06);
+  }
+}
+
+/* Main create button */
+body.theme-soft .top-create-btn {
+  background: var(--primary-color);
+  color: var(--soft-btn-text);
+  border: none;
+  box-shadow: 0 2px 10px var(--primary-glow);
+  animation: none;
+  border-radius: 14px;
+  font-weight: 600;
+}
+
+body.theme-soft .top-create-btn::before { display: none; }
+
+@media (hover: hover) {
+  body.theme-soft .top-create-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px var(--primary-glow);
+  }
+}
+
+/* Action cards (demand / supply) – tinted, gentle */
+body.theme-soft .action-card {
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--soft-shadow);
+  animation: none !important;
+}
+
+body.theme-soft .action-card::before { display: none; }
+
+body.theme-soft .action-card-demand {
+  background: var(--badge-demand-bg);
+}
+
+body.theme-soft .action-card-supply {
+  background: var(--badge-supply-bg);
+}
+
+body.theme-soft .action-card-demand .action-card-title,
+body.theme-soft .action-card-demand .action-card-sub,
+body.theme-soft .action-card-demand .action-card-icon {
+  color: var(--badge-demand-text);
+}
+
+body.theme-soft .action-card-supply .action-card-title,
+body.theme-soft .action-card-supply .action-card-sub,
+body.theme-soft .action-card-supply .action-card-icon {
+  color: var(--badge-supply-text);
+}
+
+body.theme-soft .action-card-icon {
+  background: var(--glass-bg);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+@media (hover: hover) {
+  body.theme-soft .action-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--glass-highlight);
+    box-shadow: var(--soft-shadow);
+  }
+}
+
+/* Intent pills */
+body.theme-soft .intent-pill {
+  background: var(--surface-subtle);
+  border: 1px solid var(--glass-border);
+}
+
+body.theme-soft .intent-pill.active.secondhand,
+body.theme-soft .intent-pill.active.demand {
+  background: var(--primary-color);
+  color: var(--soft-btn-text);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+body.theme-soft .intent-pill.active.supply {
+  background: var(--secondary-color);
+  color: var(--soft-btn-text);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* Inputs */
+body.theme-soft textarea,
+body.theme-soft input[type="text"],
+body.theme-soft input[type="tel"],
+body.theme-soft input[type="email"],
+body.theme-soft input[type="number"],
+body.theme-soft input[type="password"],
+body.theme-soft select {
+  background: var(--input-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  border-radius: 12px;
+}
+
+body.theme-soft textarea:focus,
+body.theme-soft input:focus,
+body.theme-soft select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+/* Calm down attention animations */
+body.theme-soft .animate-pulse-glow {
+  animation: none;
+}
+
+/* Scrollbar */
+body.theme-soft ::-webkit-scrollbar-track { background: var(--bg-dark); }
+body.theme-soft ::-webkit-scrollbar-thumb { background: var(--glass-highlight); }
+
+@media (max-width: 768px) {
+  body.theme-soft .glass {
+    border-radius: 16px;
+  }
 }
 
 

@@ -34,6 +34,15 @@ export default function ProfileSettings() {
   const [testPushStatus, setTestPushStatus] = useState('');
   const [testingPush, setTestingPush] = useState(false);
   const browserPerm = typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'unsupported';
+  const [designStyle, setDesignStyle] = useState<'classic' | 'soft'>(
+    localStorage.getItem('designStyle') === 'soft' ? 'soft' : 'classic'
+  );
+
+  const applyDesignStyle = (style: 'classic' | 'soft') => {
+    setDesignStyle(style);
+    localStorage.setItem('designStyle', style);
+    document.body.classList.toggle('theme-soft', style === 'soft');
+  };
 
   useEffect(() => {
     if (profile) {
@@ -158,6 +167,49 @@ export default function ProfileSettings() {
         <h2 style={{marginTop: 0, display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
           <User size={24} /> {t('profileSettings')}
         </h2>
+
+        {/* Display Style Picker */}
+        <div style={{ marginBottom: '1.75rem' }}>
+          <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.6rem', fontWeight: 600 }}>סגנון תצוגה</label>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
+            {([
+              { key: 'classic', title: 'קלאסי', sub: 'זכוכית, גרדיאנטים ואנרגיה', swatch: ['#6366f1', '#10b981'] },
+              { key: 'soft', title: 'רך ומינימליסטי', sub: 'נקי, רגוע ואוורירי', swatch: ['#3f8f7f', '#d9875c'] }
+            ] as const).map(opt => {
+              const active = designStyle === opt.key;
+              return (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => applyDesignStyle(opt.key)}
+                  style={{
+                    textAlign: 'start',
+                    padding: '0.85rem',
+                    borderRadius: '14px',
+                    cursor: 'pointer',
+                    background: active ? 'var(--badge-demand-bg)' : 'var(--surface-subtle)',
+                    border: `1.5px solid ${active ? 'var(--primary-color)' : 'var(--glass-border)'}`,
+                    color: 'var(--text-primary)',
+                    fontFamily: 'inherit',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.35rem'
+                  }}
+                >
+                  <span style={{ display: 'flex', gap: '4px' }}>
+                    <span style={{ width: 14, height: 14, borderRadius: '50%', background: opt.swatch[0] }} />
+                    <span style={{ width: 14, height: 14, borderRadius: '50%', background: opt.swatch[1] }} />
+                  </span>
+                  <span style={{ fontWeight: 700, fontSize: '0.92rem' }}>{opt.title}{active ? ' ✓' : ''}</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{opt.sub}</span>
+                </button>
+              );
+            })}
+          </div>
+          <p style={{ fontSize: '0.75rem', margin: '0.5rem 0 0', color: 'var(--text-secondary)' }}>
+            מצב יום/לילה נשמר בנפרד וזמין בשני הסגנונות (כפתור ☀️/🌙 בסרגל העליון).
+          </p>
+        </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
           <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.5rem' }}>{t('alias')}</label>

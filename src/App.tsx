@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { Plus, Settings, Moon, Sun } from 'lucide-react';
+import { Plus, Settings, Moon, Sun, Share2, Palette } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './useAuth';
 import CreatePost from './components/CreatePost';
@@ -28,6 +28,9 @@ function TopUtilityBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLightMode, setIsLightMode] = useState(localStorage.getItem('theme') === 'light');
+  const [designStyle, setDesignStyle] = useState<'classic' | 'soft'>(
+    localStorage.getItem('designStyle') === 'soft' ? 'soft' : 'classic'
+  );
 
   useEffect(() => {
     document.body.style.direction = i18n.language === 'he' ? 'rtl' : 'ltr';
@@ -37,6 +40,14 @@ function TopUtilityBar() {
   if (location.pathname.startsWith('/chat/')) {
     return null;
   }
+
+  const toggleDesignStyle = () => {
+    const isSoftNow = document.body.classList.contains('theme-soft');
+    const next = isSoftNow ? 'classic' : 'soft';
+    setDesignStyle(next);
+    localStorage.setItem('designStyle', next);
+    document.body.classList.toggle('theme-soft', next === 'soft');
+  };
 
   const toggleTheme = () => {
     const newTheme = isLightMode ? 'dark' : 'light';
@@ -55,6 +66,20 @@ function TopUtilityBar() {
     document.body.style.direction = newLang === 'he' ? 'rtl' : 'ltr';
   };
 
+  const handleShareApp = () => {
+    const url = window.location.origin;
+    const shareText = `היי! מזמין אותך להצטרף ל-MateMe – פלטפורמת הקהילה המקומית המקשרת בינינו באנונימיות מלאה 🤝\nלחץ על הקישור לכניסה לאפליקציה:\n${url}`;
+    if (navigator.share) {
+      navigator.share({
+        title: 'MateMe - פלטפורמת הקהילה המקומית',
+        text: shareText,
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(shareText);
+      alert('הודעת ההזמנה והקישור הועתקו ללוח! ניתן להדביק ולשלוח בוואטסאפ.');
+    }
+  };
+
   return (
     <div style={{
       maxWidth: '800px',
@@ -65,14 +90,20 @@ function TopUtilityBar() {
       alignItems: 'center'
     }}>
       <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center' }}>
-        <button onClick={toggleTheme} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', width: '42px', height: '42px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+        <button onClick={toggleTheme} title="החלף ערכת נושא" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', width: '42px', height: '42px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
           {isLightMode ? <Moon size={19} /> : <Sun size={19} />}
         </button>
-        <button onClick={toggleLanguage} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', width: '42px', height: '42px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '0.85rem', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+        <button onClick={toggleLanguage} title="החלף שפה" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', width: '42px', height: '42px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '0.85rem', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
           {i18n.language === 'he' ? 'EN' : 'HE'}
         </button>
+        <button onClick={toggleDesignStyle} title={designStyle === 'soft' ? 'מעבר לעיצוב הקלאסי' : 'מעבר לעיצוב הרך והמינימליסטי'} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', width: '42px', height: '42px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+          <Palette size={18} />
+        </button>
+        <button onClick={handleShareApp} title="שתף אפליקציה" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', width: '42px', height: '42px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+          <Share2 size={18} />
+        </button>
         {user && profile && (
-          <button onClick={() => navigate('/settings')} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', width: '42px', height: '42px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+          <button onClick={() => navigate('/settings')} title="הגדרות פרופיל" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', width: '42px', height: '42px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
             <Settings size={19} />
           </button>
         )}
@@ -163,6 +194,9 @@ function App() {
   useEffect(() => {
     if (localStorage.getItem('theme') === 'light') {
       document.body.classList.add('light-mode');
+    }
+    if (localStorage.getItem('designStyle') === 'soft') {
+      document.body.classList.add('theme-soft');
     }
   }, []);
   

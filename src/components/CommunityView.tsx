@@ -58,10 +58,10 @@ export default function CommunityView() {
 
   const handleShare = () => {
     const url = `${window.location.origin}/join/${id}`;
-    const text = `היי! הוזמנת להצטרף ל-${community.name} באפליקציית החיבורים הקהילתיים.\nלחץ על הקישור להצטרפות:\n${url}`;
+    const text = `היי! הוזמנת להצטרף לקהילת "${community.name}" ב-MateMe 🤝\nלחץ על הקישור לכניסה והצטרפות:\n${url}`;
     if (navigator.share) {
       navigator.share({
-        title: `הצטרף לקהילה: ${community.name}`,
+        title: `הצטרף לקהילת ${community.name} ב-MateMe`,
         text: text,
       }).catch(console.error);
     } else {
