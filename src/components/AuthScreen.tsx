@@ -132,9 +132,21 @@ export default function AuthScreen() {
             <span>קהילה מקומית חכמה, אנונימית ובטוחה</span>
           </div>
 
-          <h1 style={{ margin: '0 0 0.5rem 0', fontSize: '2.35rem', lineHeight: 1.15 }}>
-            MateMe 🤝
-          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.7rem', marginBottom: '0.5rem' }}>
+            <img
+              src="/logo.svg"
+              alt="MateMe Logo"
+              style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '14px',
+                boxShadow: '0 6px 18px rgba(30, 58, 138, 0.25)'
+              }}
+            />
+            <h1 style={{ margin: 0, fontSize: '2.35rem', lineHeight: 1.15 }}>
+              MateMe
+            </h1>
+          </div>
           <p style={{ margin: '0 auto', fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-primary)', maxWidth: '420px', lineHeight: 1.45 }}>
             המקום שבו שכנים, חברים וקהילות עוזרים זה לזה סביבך
           </p>

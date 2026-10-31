@@ -58,7 +58,7 @@ export default function NotificationBell() {
           const body = payload.notification?.body || '';
           if ('Notification' in window && Notification.permission === 'granted') {
             navigator.serviceWorker?.ready
-              .then((reg) => reg.showNotification(title, { body, icon: '/vite.svg' }))
+              .then((reg) => reg.showNotification(title, { body, icon: '/pwa-192x192.png' }))
               .catch(() => new window.Notification(title, { body }));
           }
         });

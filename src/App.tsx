@@ -94,6 +94,17 @@ function Home() {
         <div className="top-header-row">
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'start' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+              <img
+                src="/logo.svg"
+                alt="MateMe Logo"
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '11px',
+                  boxShadow: '0 3px 10px rgba(30, 58, 138, 0.22)',
+                  flexShrink: 0
+                }}
+              />
               <h1 style={{ margin: 0, fontSize: '1.85rem', lineHeight: 1.1 }}>{t('appTitle')}</h1>
               {user && (
                 <div style={{ opacity: 0.95, fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'var(--surface-subtle)', padding: '0.25rem 0.65rem', borderRadius: '999px', border: '1px solid var(--glass-border)' }}>
