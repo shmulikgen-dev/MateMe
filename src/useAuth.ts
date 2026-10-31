@@ -7,7 +7,7 @@ import {
   onAuthStateChanged 
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
 export interface UserProfile {
   uid: string;
@@ -67,19 +67,9 @@ export function useAuth() {
     }
   };
 
-  const checkEmailExists = async (email: string) => {
-    const q = query(collection(db, 'users'), where('email', '==', email));
-    const snap = await getDocs(q);
-    return !snap.empty;
-  };
-
   const registerWithEmail = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const exists = await checkEmailExists(email);
-      if (exists) {
-        throw new Error('email_exists');
-      }
       await createUserWithEmailAndPassword(auth, email, password);
       // Wait for onAuthStateChanged to pick this up. The profile will be created in App.tsx
     } finally {
